@@ -1,0 +1,16 @@
+{
+  "name": "claudemy",
+  "version": "1.0.0",
+  "description": "A second-screen learning companion for Claude Code: follows your session live, explains every turn, quizzes you with checkpoints, and feeds what you learned back into Claude Code.",
+  "private": true,
+  "license": "MIT",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "setup": "node setup.mjs",
+    "skills:install": "node claude-skills/install.mjs",
+    "skills:uninstall": "node claude-skills/install.mjs --uninstall"
+  },
+  "engines": { "node": ">=18" },
+  "keywords": ["claude-code", "learning", "spaced-repetition", "cognitive-debt", "hooks", "skills"]
+}
