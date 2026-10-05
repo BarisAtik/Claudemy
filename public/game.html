@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deepvale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root { --ink: #F5F4EF; --muted: #D3CFC5; --gold: #FFC53D; --mint: #2EE6A6; --coral: #E5534B; --violet: #D97757; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--ink); font: 800 15px/1.4 'Nunito', 'Segoe UI', system-ui, sans-serif; user-select: none; }
+canvas#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#hud { position: fixed; inset: 0; pointer-events: none; }
+#cross { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; transform: translate(-50%, -50%); }
+#cross::before, #cross::after { content: ''; position: absolute; background: rgba(255,255,255,.85); mix-blend-mode: difference; }
+#cross::before { left: 10px; top: 0; width: 2px; height: 22px; }
+#cross::after { top: 10px; left: 0; width: 22px; height: 2px; }
+#timer { position: absolute; top: 16px; right: 18px; padding: 8px 14px; border-radius: 14px; background: rgba(20,19,18,.62); font: 26px/1 'Lilita One', 'Arial Rounded MT Bold', sans-serif; letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
+#timer.low { color: var(--coral); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .55; } }
+#stats { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); width: 492px; display: flex; justify-content: space-between; }
+.bar { display: flex; gap: 2px; }
+.bar i { width: 22px; height: 20px; display: block; background-size: contain; background-repeat: no-repeat; filter: drop-shadow(0 2px 0 rgba(0,0,0,.6)); }
+#hotbar { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 4px; padding: 5px; background: rgba(20,19,18,.62); border-radius: 14px; }
+.slot { width: 50px; height: 50px; border-radius: 9px; background: rgba(255,255,255,.08); border: 3px solid transparent; position: relative; image-rendering: pixelated; }
+.slot.sel { border-color: #fff; background: rgba(255,255,255,.18); }
+.slot .ic { position: absolute; inset: 6px; image-rendering: pixelated; background-repeat: no-repeat; }
+.slot b { position: absolute; right: 4px; bottom: 1px; font-size: 13px; text-shadow: 0 2px 0 #000; }
+#label { position: absolute; left: 50%; bottom: 130px; transform: translateX(-50%); padding: 4px 12px; border-radius: 10px; background: rgba(20,19,18,.55); opacity: 0; transition: opacity .3s; }
+#label.on { opacity: 1; }
+#toast { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); padding: 10px 18px; border-radius: 14px; background: rgba(20,19,18,.75); font-size: 17px; opacity: 0; transition: opacity .3s; }
+#toast.on { opacity: 1; }
+#hurt { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, rgba(200,20,20,.55)); opacity: 0; transition: opacity .25s; }
+#water { position: absolute; inset: 0; background: rgba(30,80,170,.38); opacity: 0; }
+#info { position: absolute; left: 14px; top: 14px; font-size: 12.5px; color: rgba(255,255,255,.75); text-shadow: 0 1px 0 #000; line-height: 1.5; }
+#overlay, #craft { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(15,14,13,.74); backdrop-filter: blur(4px); z-index: 5; }
+.panel { background: #2A2927; border: 2px solid #44423D; border-radius: 26px; padding: 30px 32px; width: min(560px, 92vw); text-align: center; box-shadow: 0 10px 0 #121110; }
+.panel h1 { font: 54px/1 'Lilita One', 'Arial Rounded MT Bold', sans-serif; /* game title */ margin: 0 0 6px; color: #D97757; }
+.panel h2 { font: 32px/1.1 'Lilita One', sans-serif; margin: 0 0 8px; }
+.panel p { color: var(--muted); margin: 0 0 18px; }
+.big { font: 44px/1 'Lilita One', sans-serif; color: var(--gold); margin: 6px 0 12px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 16px; padding: 15px 26px; background: var(--mint); color: #003222; font: 900 16px/1 'Nunito', sans-serif; text-transform: uppercase; letter-spacing: .03em; box-shadow: 0 5px 0 #12A577; cursor: pointer; text-decoration: none; margin: 4px; }
+.btn:active { transform: translateY(5px); box-shadow: none; }
+.btn.ghost { background: transparent; color: var(--muted); box-shadow: none; border: 2px solid #44423D; }
+.btn.violet { background: var(--violet); color: #fff; box-shadow: 0 5px 0 #A9573D; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; text-align: left; font-size: 13.5px; color: var(--muted); margin: 18px auto 6px; max-width: 380px; }
+.keys b { color: #fff; }
+.prog { height: 14px; background: rgba(0,0,0,.35); border-radius: 8px; overflow: hidden; margin: 8px 0 18px; }
+.prog i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #FFE08A); }
+.small { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+.small a { color: var(--muted); cursor: pointer; text-decoration: underline; }
+#craft .panel { width: min(720px, 94vw); text-align: left; }
+.inv { display: grid; grid-template-columns: repeat(9, 50px); gap: 4px; margin: 6px 0 18px; }
+.recipes { display: grid; gap: 8px; max-height: 42vh; overflow-y: auto; }
+.recipe { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,.06); border-radius: 14px; padding: 8px 12px; }
+.recipe .slot { width: 40px; height: 40px; border-width: 2px; }
+.recipe .slot .ic { inset: 6px; }
+.recipe .name { flex: 1; }
+.recipe .need { font-size: 12.5px; color: var(--muted); }
+.recipe .btn { padding: 10px 14px; font-size: 13px; }
+.recipe.no { opacity: .45; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div id="water"></div><div id="hurt"></div>
+  <div id="cross"></div>
+  <div id="info"></div>
+  <div id="timer"><span>⏱</span><span id="tleft">0:00</span></div>
+  <div id="toast"></div>
+  <div id="label"></div>
+  <div id="stats"><div class="bar" id="hearts"></div><div class="bar" id="food"></div></div>
+  <div id="hotbar"></div>
+</div>
+<div id="overlay"><div class="panel"><h1>Deepvale</h1><p>Loading the world</p></div></div>
+<div id="craft" hidden><div class="panel">
+  <h2>Crafting</h2><p style="margin-bottom:8px">Your inventory. The first row is your hotbar.</p>
+  <div class="inv" id="invgrid"></div>
+  <div class="recipes" id="recipes"></div>
+  <div style="text-align:center;margin-top:16px"><button class="btn violet" id="craftclose">Back to the world (C)</button></div>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+// ================= constants =================
+const CS = 16, H = 72, SEA = 24, RADIUS = 5;
+const DAY_SECONDS = 600;
+const B = { AIR: 0, GRASS: 1, DIRT: 2, STONE: 3, SAND: 4, WATER: 5, LOG: 6, LEAVES: 7, PLANKS: 8, COAL_ORE: 9, IRON_ORE: 10, BEDROCK: 11, GLASS: 12, COBBLE: 13, SNOW: 14, GRAVEL: 15 };
+const I = { STICK: 100, WOOD_PICK: 101, STONE_PICK: 102, APPLE: 103, COAL: 104, IRON_PICK: 105, BREAD: 106 };
+// tile indices in the atlas (8 x 4 tiles of 16 px)
+const T = { GRASS_TOP: 0, GRASS_SIDE: 1, DIRT: 2, STONE: 3, SAND: 4, WATER: 5, LOG_SIDE: 6, LOG_TOP: 7, LEAVES: 8, PLANKS: 9, COAL_ORE: 10, IRON_ORE: 11, BEDROCK: 12, GLASS: 13, COBBLE: 14, SNOW: 15, SNOW_SIDE: 16, GRAVEL: 17,
+  STICK: 24, WOOD_PICK: 25, STONE_PICK: 26, APPLE: 27, COAL: 28, IRON_PICK: 29, BREAD: 30 };
+const BLOCKS = {
+  [B.GRASS]: { name: 'Grass', hard: 0.6, tex: [T.GRASS_TOP, T.GRASS_SIDE, T.DIRT], drop: B.DIRT },
+  [B.DIRT]: { name: 'Dirt', hard: 0.5, tex: [T.DIRT, T.DIRT, T.DIRT] },
+  [B.STONE]: { name: 'Stone', hard: 1.5, tex: [T.STONE, T.STONE, T.STONE], drop: B.COBBLE, pick: 1 },
+  [B.SAND]: { name: 'Sand', hard: 0.5, tex: [T.SAND, T.SAND, T.SAND] },
+  [B.WATER]: { name: 'Water', hard: Infinity, tex: [T.WATER, T.WATER, T.WATER], liquid: true, transparent: true },
+  [B.LOG]: { name: 'Log', hard: 1.2, tex: [T.LOG_TOP, T.LOG_SIDE, T.LOG_TOP] },
+  [B.LEAVES]: { name: 'Leaves', hard: 0.2, tex: [T.LEAVES, T.LEAVES, T.LEAVES], transparent: true, drop: 0 },
+  [B.PLANKS]: { name: 'Planks', hard: 1.0, tex: [T.PLANKS, T.PLANKS, T.PLANKS] },
+  [B.COAL_ORE]: { name: 'Coal ore', hard: 2.0, tex: [T.COAL_ORE, T.COAL_ORE, T.COAL_ORE], drop: I.COAL, pick: 1 },
+  [B.IRON_ORE]: { name: 'Iron ore', hard: 2.5, tex: [T.IRON_ORE, T.IRON_ORE, T.IRON_ORE], pick: 2 },
+  [B.BEDROCK]: { name: 'Bedrock', hard: Infinity, tex: [T.BEDROCK, T.BEDROCK, T.BEDROCK] },
+  [B.GLASS]: { name: 'Glass', hard: 0.4, tex: [T.GLASS, T.GLASS, T.GLASS], transparent: true },
+  [B.COBBLE]: { name: 'Cobblestone', hard: 1.8, tex: [T.COBBLE, T.COBBLE, T.COBBLE], pick: 1 },
+  [B.SNOW]: { name: 'Snowy dirt', hard: 0.6, tex: [T.SNOW, T.SNOW_SIDE, T.DIRT], drop: B.DIRT },
+  [B.GRAVEL]: { name: 'Gravel', hard: 0.7, tex: [T.GRAVEL, T.GRAVEL, T.GRAVEL] },
+};
+const ITEMS = {
+  [I.STICK]: { name: 'Stick', tex: T.STICK },
+  [I.WOOD_PICK]: { name: 'Wooden pickaxe', tex: T.WOOD_PICK, tier: 1, speed: 2.5 },
+  [I.STONE_PICK]: { name: 'Stone pickaxe', tex: T.STONE_PICK, tier: 2, speed: 4 },
+  [I.IRON_PICK]: { name: 'Iron pickaxe', tex: T.IRON_PICK, tier: 3, speed: 6 },
+  [I.APPLE]: { name: 'Apple', tex: T.APPLE, food: 4 },
+  [I.BREAD]: { name: 'Berry bread', tex: T.BREAD, food: 7 },
+  [I.COAL]: { name: 'Coal', tex: T.COAL },
+};
+const nameOf = (id) => (BLOCKS[id] || ITEMS[id] || { name: '?' }).name;
+const iconOf = (id) => (ITEMS[id] ? ITEMS[id].tex : BLOCKS[id] ? (id === B.LOG ? T.LOG_SIDE : id === B.GRASS ? T.GRASS_SIDE : BLOCKS[id].tex[1]) : 0);
+const RECIPES = [
+  { out: B.PLANKS, n: 4, need: [[B.LOG, 1]] },
+  { out: I.STICK, n: 4, need: [[B.PLANKS, 2]] },
+  { out: I.WOOD_PICK, n: 1, need: [[B.PLANKS, 3], [I.STICK, 2]] },
+  { out: I.STONE_PICK, n: 1, need: [[B.COBBLE, 3], [I.STICK, 2]] },
+  { out: I.IRON_PICK, n: 1, need: [[B.IRON_ORE, 3], [I.COAL, 3], [I.STICK, 2]] },
+  { out: B.GLASS, n: 2, need: [[B.SAND, 2], [I.COAL, 1]] },
+  { out: B.STONE, n: 1, need: [[B.COBBLE, 1], [I.COAL, 1]] },
+  { out: I.BREAD, n: 1, need: [[I.APPLE, 2]] },
+];
+
+// ================= random + noise =================
+function mulberry(a) { return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+let SEED = 1;
+function hash2(x, z, s = 0) { let h = Math.imul(x | 0, 374761393) ^ Math.imul(z | 0, 668265263) ^ Math.imul(SEED + s, 2246822519); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function hash3(x, y, z, s = 0) { let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 1103515245) ^ Math.imul(z | 0, 668265263) ^ Math.imul(SEED + s, 2246822519); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+const fade = (t) => t * t * (3 - 2 * t);
+function noise2(x, z, s) {
+  const x0 = Math.floor(x), z0 = Math.floor(z), fx = fade(x - x0), fz = fade(z - z0);
+  const a = hash2(x0, z0, s), b = hash2(x0 + 1, z0, s), c = hash2(x0, z0 + 1, s), d = hash2(x0 + 1, z0 + 1, s);
+  return (a + (b - a) * fx) + ((c + (d - c) * fx) - (a + (b - a) * fx)) * fz;
+}
+function noise3(x, y, z, s) {
+  const x0 = Math.floor(x), y0 = Math.floor(y), z0 = Math.floor(z), fx = fade(x - x0), fy = fade(y - y0), fz = fade(z - z0);
+  const L = (a, b, t) => a + (b - a) * t;
+  const v = (i, j, k) => hash3(x0 + i, y0 + j, z0 + k, s);
+  return L(L(L(v(0, 0, 0), v(1, 0, 0), fx), L(v(0, 1, 0), v(1, 1, 0), fx), fy), L(L(v(0, 0, 1), v(1, 0, 1), fx), L(v(0, 1, 1), v(1, 1, 1), fx), fy), fz);
+}
+function fbm2(x, z, oct, s) { let a = 0, f = 1, amp = 1, sum = 0; for (let i = 0; i < oct; i++) { a += noise2(x * f, z * f, s + i * 17) * amp; sum += amp; f *= 2; amp *= 0.5; } return a / sum; }
+
+const hcache = new Map();
+function heightAt(x, z) {
+  const k = x * 100003 + z;
+  let h = hcache.get(k); if (h !== undefined) return h;
+  const cont = fbm2(x / 220, z / 220, 4, 1);
+  const hills = fbm2(x / 70, z / 70, 4, 2);
+  const ridge = 1 - Math.abs(fbm2(x / 130, z / 130, 3, 3) * 2 - 1);
+  const mount = Math.max(0, cont - 0.52) * 2.2;
+  h = Math.round(14 + cont * 18 + hills * 10 + ridge * ridge * mount * 34);
+  h = Math.max(3, Math.min(H - 6, h));
+  if (hcache.size > 300000) hcache.clear();
+  hcache.set(k, h); return h;
+}
+const isTree = (x, z) => { const h = heightAt(x, z); if (h <= SEA + 1 || h >= 48) return false; const forest = fbm2(x / 60, z / 60, 2, 11); return hash2(x, z, 9) < (forest > 0.56 ? 0.03 : forest > 0.45 ? 0.008 : 0.0015); };
+
+// ================= world =================
+const chunks = new Map();
+const key = (cx, cz) => `${cx},${cz}`;
+let mods = {}; // "x,y,z" -> block id, applied on top of generated terrain
+const idx = (x, y, z) => (y * CS + z) * CS + x;
+
+function generateChunk(cx, cz) {
+  const data = new Uint8Array(CS * CS * H);
+  const ox = cx * CS, oz = cz * CS;
+  for (let z = 0; z < CS; z++) for (let x = 0; x < CS; x++) {
+    const wx = ox + x, wz = oz + z, h = heightAt(wx, wz);
+    const beach = h <= SEA + 1, snowy = h > 46;
+    for (let y = 0; y < H; y++) {
+      let b = B.AIR;
+      if (y === 0) b = B.BEDROCK;
+      else if (y < h - 3) {
+        b = B.STONE;
+        if (y > 1 && noise3(wx / 16, y / 11, wz / 16, 21) > 0.68 && y < h - 5) b = B.AIR;
+        else { const r = hash3(wx, y, wz, 31); if (r < 0.011 && y < h - 4) b = B.COAL_ORE; else if (r > 0.9955 && y < 34) b = B.IRON_ORE; else if (r > 0.6 && r < 0.603) b = B.GRAVEL; }
+      } else if (y < h) b = beach ? B.SAND : B.DIRT;
+      else if (y === h) b = beach ? (h < SEA - 2 ? B.GRAVEL : B.SAND) : snowy ? B.SNOW : B.GRASS;
+      else if (y <= SEA) b = B.WATER;
+      data[idx(x, y, z)] = b;
+    }
+  }
+  // trees, including those whose crowns reach in from neighbouring columns
+  for (let z = -2; z < CS + 2; z++) for (let x = -2; x < CS + 2; x++) {
+    const wx = ox + x, wz = oz + z;
+    if (!isTree(wx, wz)) continue;
+    const h = heightAt(wx, wz), trunk = 4 + Math.floor(hash2(wx, wz, 13) * 3);
+    const put = (lx, y, lz, b, soft) => {
+      if (lx < 0 || lz < 0 || lx >= CS || lz >= CS || y < 0 || y >= H) return;
+      const i = idx(lx, y, lz); if (soft && data[i] !== B.AIR) return; data[i] = b;
+    };
+    for (let dy = -2; dy <= 1; dy++) {
+      const r = dy >= 0 ? 1 : 2, y = h + trunk + dy;
+      for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx++) {
+        if (Math.abs(dx) === r && Math.abs(dz) === r && hash3(wx + dx, y, wz + dz, 14) < 0.6) continue;
+        put(x + dx, y, z + dz, B.LEAVES, true);
+      }
+    }
+    put(x, h + trunk + 2, z, B.LEAVES, true);
+    for (let y = h + 1; y <= h + trunk; y++) put(x, y, z, B.LOG, false);
+    put(x, h, z, B.DIRT, false);
+  }
+  for (const k in mods) {
+    const [x, y, z] = k.split(',').map(Number);
+    if (Math.floor(x / CS) === cx && Math.floor(z / CS) === cz) data[idx(x - ox, y, z - oz)] = mods[k];
+  }
+  return { cx, cz, data, mesh: null, water: null, dirty: true };
+}
+
+function getBlock(x, y, z) {
+  if (y < 0) return B.BEDROCK; if (y >= H) return B.AIR;
+  const cx = Math.floor(x / CS), cz = Math.floor(z / CS), c = chunks.get(key(cx, cz));
+  if (!c) return B.STONE;
+  return c.data[idx(x - cx * CS, y, z - cz * CS)];
+}
+function setBlock(x, y, z, b) {
+  if (y < 1 || y >= H) return;
+  const cx = Math.floor(x / CS), cz = Math.floor(z / CS), c = chunks.get(key(cx, cz));
+  if (!c) return;
+  const lx = x - cx * CS, lz = z - cz * CS;
+  c.data[idx(lx, y, lz)] = b; c.dirty = true;
+  mods[`${x},${y},${z}`] = b;
+  const mark = (dx, dz) => { const n = chunks.get(key(cx + dx, cz + dz)); if (n) n.dirty = true; };
+  if (lx === 0) mark(-1, 0); if (lx === CS - 1) mark(1, 0); if (lz === 0) mark(0, -1); if (lz === CS - 1) mark(0, 1);
+}
+const solid = (b) => b !== B.AIR && b !== B.WATER;
+const opaque = (b) => b !== B.AIR && !(BLOCKS[b] && BLOCKS[b].transparent);
+
+// ================= textures (generated, original) =================
+const atlas = document.createElement('canvas'); atlas.width = 128; atlas.height = 64;
+(function paintAtlas() {
+  const g = atlas.getContext('2d'), rnd = mulberry(1337);
+  const tile = (t, fn) => { const ox = (t % 8) * 16, oy = Math.floor(t / 8) * 16; for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const c = fn(x, y); if (!c) continue; g.fillStyle = c; g.fillRect(ox + x, oy + y, 1, 1); } };
+  const rgb = (r, gg, b, a = 1) => `rgba(${r | 0},${gg | 0},${b | 0},${a})`;
+  const jit = (base, amt) => base.map((v) => Math.max(0, Math.min(255, v + (rnd() - 0.5) * amt)));
+  const px = (base, amt, a) => { const [r, gg, b] = jit(base, amt); return rgb(r, gg, b, a); };
+  const grass = [96, 158, 62], dirt = [125, 88, 58], stone = [122, 124, 128];
+  tile(T.GRASS_TOP, () => px(rnd() < 0.15 ? [78, 138, 50] : grass, 26));
+  tile(T.DIRT, () => px(rnd() < 0.12 ? [100, 70, 46] : dirt, 24));
+  tile(T.GRASS_SIDE, (x, y) => (y < 3 + (hash2(x, 0, 7) < 0.5 ? 1 : 0) ? px(grass, 24) : px(rnd() < 0.12 ? [100, 70, 46] : dirt, 24)));
+  tile(T.STONE, (x, y) => px(noise2(x / 3, y / 3, 5) > 0.62 ? [100, 102, 106] : stone, 18));
+  tile(T.SAND, () => px([219, 203, 150], 16));
+  tile(T.WATER, (x, y) => px([52, 105, 196], 14, 0.72 + 0.1 * Math.sin((x + y) / 2)));
+  tile(T.LOG_SIDE, (x) => px(x % 4 === 0 ? [86, 62, 38] : [112, 82, 50], 16));
+  tile(T.LOG_TOP, (x, y) => { const d = Math.hypot(x - 7.5, y - 7.5); return d > 7 ? px([86, 62, 38], 12) : px(Math.floor(d) % 2 ? [176, 140, 92] : [156, 120, 76], 10); });
+  tile(T.LEAVES, () => (rnd() < 0.16 ? null : px(rnd() < 0.3 ? [48, 110, 40] : [64, 134, 52], 30)));
+  tile(T.PLANKS, (x, y) => px((y % 4 === 3) || (x === (y < 8 ? 4 : 11) && y % 4 !== 3 && rnd() < 0.5) ? [130, 96, 56] : [176, 136, 84], 14));
+  const ore = (spot) => (x, y) => { const n = noise2(x / 2.2, y / 2.2, spot[3]); return n > 0.7 ? px(spot.slice(0, 3), 20) : px(stone, 16); };
+  tile(T.COAL_ORE, ore([36, 36, 40, 41]));
+  tile(T.IRON_ORE, ore([206, 160, 122, 43]));
+  tile(T.BEDROCK, () => px(rnd() < 0.5 ? [52, 52, 56] : [86, 86, 90], 20));
+  tile(T.GLASS, (x, y) => (x === 0 || y === 0 || x === 15 || y === 15 ? rgb(220, 240, 255, 0.95) : (x - y === 3 || x - y === 4) && x > 5 && x < 12 ? rgb(255, 255, 255, 0.7) : rgb(200, 230, 255, 0.12)));
+  tile(T.COBBLE, (x, y) => { const n = noise2(x / 2.6, y / 2.6, 44); return px(n > 0.72 ? [84, 84, 88] : n > 0.45 ? [130, 130, 134] : [108, 108, 112], 14); });
+  tile(T.SNOW, () => px([238, 244, 250], 10));
+  tile(T.SNOW_SIDE, (x, y) => (y < 4 + (hash2(x, 1, 8) < 0.5 ? 1 : 0) ? px([238, 244, 250], 10) : px(dirt, 24)));
+  tile(T.GRAVEL, () => px(rnd() < 0.4 ? [96, 92, 90] : rnd() < 0.5 ? [140, 134, 130] : [116, 112, 110], 18));
+  // item icons
+  const draw = (t, cells) => tile(t, (x, y) => { const c = cells(x, y); return c ? px(c, 10) : null; });
+  draw(T.STICK, (x, y) => (Math.abs(x + y - 15) <= 1 && x > 2 && x < 13 ? (x + y === 15 ? [150, 108, 60] : [110, 78, 44]) : null));
+  const pick = (head) => (x, y) => { if (Math.abs(x + y - 17) <= 1 && x > 3 && y > 3 && x < 14) return [120, 86, 50]; const d = x - y; if (y >= 2 && y <= 4 && x >= 3 && x <= 13 && !(x > 5 && x < 11 && y === 4)) return head; if (x >= 11 && x <= 13 && y >= 2 && y <= 9 && d >= 4) return head; if (x >= 3 && x <= 5 && y >= 2 && y <= 6) return head; return null; };
+  draw(T.WOOD_PICK, pick([176, 136, 84]));
+  draw(T.STONE_PICK, pick([140, 140, 146]));
+  draw(T.IRON_PICK, pick([226, 226, 232]));
+  draw(T.APPLE, (x, y) => { const d = Math.hypot(x - 7.5, y - 9); if (x >= 7 && x <= 8 && y >= 2 && y <= 5) return [100, 70, 40]; if (x >= 9 && x <= 11 && y >= 3 && y <= 4) return [70, 150, 60]; return d < 5.5 ? (x < 6 && y < 8 ? [240, 90, 80] : [200, 30, 40]) : null; });
+  draw(T.COAL, (x, y) => (Math.hypot(x - 7.5, y - 8) < 5.5 + noise2(x, y, 3) ? [40, 40, 46] : null));
+  draw(T.BREAD, (x, y) => (y >= 6 && y <= 12 && x >= 2 && x <= 13 && !(y === 6 && (x < 4 || x > 11)) ? (y === 6 || y === 7 ? [190, 120, 60] : [226, 170, 100]) : null));
+})();
+const atlasURL = atlas.toDataURL();
+const texture = new THREE.CanvasTexture(atlas);
+texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false;
+
+// ================= renderer + scene =================
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, 1, 0.08, 400);
+scene.fog = new THREE.Fog(0x9fd0ff, 30, RADIUS * CS - 6);
+const matSolid = new THREE.MeshBasicMaterial({ map: texture, vertexColors: true, alphaTest: 0.5 });
+const matWater = new THREE.MeshBasicMaterial({ map: texture, vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+const matGlass = new THREE.MeshBasicMaterial({ map: texture, vertexColors: true, transparent: true, depthWrite: false });
+function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+// sky: sun and moon
+const skyGroup = new THREE.Group(); scene.add(skyGroup);
+const sun = new THREE.Mesh(new THREE.PlaneGeometry(22, 22), new THREE.MeshBasicMaterial({ color: 0xfff1b0, fog: false }));
+const moon = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshBasicMaterial({ color: 0xdfe6ff, fog: false }));
+skyGroup.add(sun, moon);
+const starsGeo = new THREE.BufferGeometry(); { const p = []; const r = mulberry(9); for (let i = 0; i < 600; i++) { const th = r() * Math.PI * 2, ph = Math.acos(r() * 2 - 1); p.push(Math.sin(ph) * Math.cos(th) * 300, Math.abs(Math.cos(ph)) * 300, Math.sin(ph) * Math.sin(th) * 300); } starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); }
+const stars = new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, fog: false, transparent: true, sizeAttenuation: false }));
+skyGroup.add(stars);
+
+// selection box
+const sel = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.004, 1.004, 1.004)), new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.55 }));
+sel.visible = false; scene.add(sel);
+const crack = new THREE.Mesh(new THREE.BoxGeometry(1.01, 1.01, 1.01), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0, depthWrite: false }));
+scene.add(crack);
+
+// ================= meshing =================
+// faces: normal, 4 corners (counter-clockwise when seen from outside), shade
+const FACES = [
+  { n: [0, 1, 0], c: [[0, 1, 1], [1, 1, 1], [1, 1, 0], [0, 1, 0]], s: 1.0, t: 0 },
+  { n: [0, -1, 0], c: [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]], s: 0.5, t: 2 },
+  { n: [1, 0, 0], c: [[1, 0, 1], [1, 0, 0], [1, 1, 0], [1, 1, 1]], s: 0.8, t: 1 },
+  { n: [-1, 0, 0], c: [[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0]], s: 0.8, t: 1 },
+  { n: [0, 0, 1], c: [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], s: 0.66, t: 1 },
+  { n: [0, 0, -1], c: [[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]], s: 0.66, t: 1 },
+];
+const AO = [0.45, 0.62, 0.8, 1];
+function buildChunkMesh(c) {
+  const out = { solid: { p: [], uv: [], col: [], ix: [] }, water: { p: [], uv: [], col: [], ix: [] }, glass: { p: [], uv: [], col: [], ix: [] } };
+  const ox = c.cx * CS, oz = c.cz * CS, e = 0.002;
+  const get = (x, y, z) => (x >= 0 && x < CS && z >= 0 && z < CS && y >= 0 && y < H ? c.data[idx(x, y, z)] : getBlock(ox + x, y, oz + z));
+  for (let y = 0; y < H; y++) for (let z = 0; z < CS; z++) for (let x = 0; x < CS; x++) {
+    const b = c.data[idx(x, y, z)]; if (b === B.AIR) continue;
+    const def = BLOCKS[b]; const isWater = b === B.WATER;
+    for (const f of FACES) {
+      const nb = get(x + f.n[0], y + f.n[1], z + f.n[2]);
+      if (isWater) { if (nb !== B.AIR && !(BLOCKS[nb] && BLOCKS[nb].transparent && nb !== B.WATER)) continue; if (f.n[1] === -1) continue; }
+      else if (opaque(nb) || (nb === b && def.transparent)) continue;
+      const tgt = isWater ? out.water : b === B.GLASS ? out.glass : out.solid;
+      const tile = def.tex[f.t], u0 = (tile % 8) / 8 + e, v0 = 1 - (Math.floor(tile / 8) + 1) / 4 + e, u1 = u0 + 1 / 8 - 2 * e, v1 = v0 + 1 / 4 - 2 * e;
+      const base = tgt.p.length / 3;
+      const uvs = [[u0, v0], [u1, v0], [u1, v1], [u0, v1]];
+      const aos = [];
+      for (let i = 0; i < 4; i++) {
+        const cn = f.c[i];
+        let wy = y + cn[1];
+        if (isWater && f.n[1] === 1 && get(x, y + 1, z) !== B.WATER) wy -= 0.12;
+        tgt.p.push(ox + x + cn[0], wy, oz + z + cn[2]);
+        tgt.uv.push(uvs[i][0], uvs[i][1]);
+        // ambient occlusion from the three blocks around this corner, on the outside of the face
+        let ao = 3;
+        if (!isWater) {
+          const ax = f.n[0] !== 0 ? null : 0, d = [cn[0] * 2 - 1, cn[1] * 2 - 1, cn[2] * 2 - 1];
+          const o = [x + f.n[0], y + f.n[1], z + f.n[2]];
+          const axes = [0, 1, 2].filter((a) => f.n[a] === 0);
+          const s1 = [...o]; s1[axes[0]] += d[axes[0]];
+          const s2 = [...o]; s2[axes[1]] += d[axes[1]];
+          const cc = [...o]; cc[axes[0]] += d[axes[0]]; cc[axes[1]] += d[axes[1]];
+          const a1 = opaque(get(...s1)) ? 1 : 0, a2 = opaque(get(...s2)) ? 1 : 0, a3 = opaque(get(...cc)) ? 1 : 0;
+          ao = a1 && a2 ? 0 : 3 - (a1 + a2 + a3);
+          void ax;
+        }
+        aos.push(ao);
+        const sh = f.s * AO[ao] * (b === B.LEAVES ? 0.92 : 1);
+        tgt.col.push(sh, sh, sh);
+      }
+      // flip the quad diagonal so ambient occlusion interpolates smoothly
+      if (aos[0] + aos[2] < aos[1] + aos[3]) tgt.ix.push(base + 1, base + 2, base + 3, base + 1, base + 3, base);
+      else tgt.ix.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+  }
+  const make = (d, mat) => {
+    if (!d.p.length) return null;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(d.p, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(d.uv, 2));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(d.col, 3));
+    g.setIndex(d.ix); g.computeBoundingSphere();
+    const m = new THREE.Mesh(g, mat); m.matrixAutoUpdate = false; return m;
+  };
+  for (const k of ['mesh', 'water', 'glass']) if (c[k]) { scene.remove(c[k]); c[k].geometry.dispose(); c[k] = null; }
+  c.mesh = make(out.solid, matSolid); c.water = make(out.water, matWater); c.glass = make(out.glass, matGlass);
+  for (const k of ['mesh', 'water', 'glass']) if (c[k]) scene.add(c[k]);
+  c.dirty = false;
+}
+
+function updateChunks(budget) {
+  const pcx = Math.floor(player.pos.x / CS), pcz = Math.floor(player.pos.z / CS);
+  const want = [];
+  for (let dz = -RADIUS - 1; dz <= RADIUS + 1; dz++) for (let dx = -RADIUS - 1; dx <= RADIUS + 1; dx++) {
+    if (dx * dx + dz * dz > (RADIUS + 1.5) ** 2) continue;
+    want.push([pcx + dx, pcz + dz, dx * dx + dz * dz]);
+  }
+  want.sort((a, b) => a[2] - b[2]);
+  let gen = 0;
+  for (const [cx, cz] of want) { if (gen >= budget) break; if (!chunks.has(key(cx, cz))) { chunks.set(key(cx, cz), generateChunk(cx, cz)); gen++; } }
+  let meshed = 0;
+  for (const [cx, cz, d2] of want) {
+    if (d2 > RADIUS * RADIUS + 1) continue;
+    const c = chunks.get(key(cx, cz)); if (!c || !c.dirty) continue;
+    if (![[1, 0], [-1, 0], [0, 1], [0, -1]].every(([a, b]) => chunks.has(key(cx + a, cz + b)))) continue;
+    buildChunkMesh(c); if (++meshed >= Math.max(1, budget)) break;
+  }
+  for (const [k, c] of chunks) {
+    const dx = c.cx - pcx, dz = c.cz - pcz;
+    if (dx * dx + dz * dz > (RADIUS + 3) ** 2) { for (const m of ['mesh', 'water', 'glass']) if (c[m]) { scene.remove(c[m]); c[m].geometry.dispose(); } chunks.delete(k); }
+  }
+}
+
+// ================= player =================
+const player = { pos: new THREE.Vector3(8, 40, 8), vel: new THREE.Vector3(), yaw: 0, pitch: 0, onGround: false, health: 20, food: 20, spawn: null, fallFrom: null, inWater: false, eyeInWater: false };
+let inv = new Array(27).fill(null); // {id, n}
+let selSlot = 0, worldTime = 0.3;
+function addItem(id, n = 1) {
+  for (const s of inv) if (s && s.id === id && s.n < 64) { const k = Math.min(n, 64 - s.n); s.n += k; n -= k; if (!n) return true; }
+  for (let i = 0; i < inv.length && n; i++) if (!inv[i]) { const k = Math.min(n, 64); inv[i] = { id, n: k }; n -= k; }
+  return n === 0;
+}
+function count(id) { return inv.reduce((a, s) => a + (s && s.id === id ? s.n : 0), 0); }
+function take(id, n) { for (let i = inv.length - 1; i >= 0 && n; i--) { const s = inv[i]; if (s && s.id === id) { const k = Math.min(n, s.n); s.n -= k; n -= k; if (!s.n) inv[i] = null; } } }
+function findSpawn() {
+  for (let r = 0; r < 200; r += 4) for (let a = 0; a < 8; a++) {
+    const x = Math.round(Math.cos(a) * r) + 8, z = Math.round(Math.sin(a) * r) + 8, h = heightAt(x, z);
+    if (h > SEA + 1 && !isTree(x, z)) return { x: x + 0.5, y: h + 1.01, z: z + 0.5 };
+  }
+  return { x: 8.5, y: heightAt(8, 8) + 2, z: 8.5 };
+}
+
+// collision against the voxel grid (axis by axis)
+const PW = 0.3, PH = 1.8, EYE = 1.62;
+function collides(p) {
+  for (let x = Math.floor(p.x - PW); x <= Math.floor(p.x + PW); x++)
+    for (let y = Math.floor(p.y); y <= Math.floor(p.y + PH - 0.001); y++)
+      for (let z = Math.floor(p.z - PW); z <= Math.floor(p.z + PW); z++)
+        if (solid(getBlock(x, y, z))) return true;
+  return false;
+}
+function moveAxis(axis, d) {
+  const p = player.pos;
+  const step = Math.sign(d) * Math.min(Math.abs(d), 0.4);
+  let left = d;
+  while (Math.abs(left) > 1e-6) {
+    const s = Math.abs(left) < Math.abs(step) ? left : step;
+    p[axis] += s;
+    if (collides(p)) {
+      p[axis] -= s;
+      // slide flush against the block
+      const inc = Math.sign(s) * 0.01;
+      for (let i = 0; i < 40; i++) { p[axis] += inc; if (collides(p)) { p[axis] -= inc; break; } }
+      return true;
+    }
+    left -= s;
+  }
+  return false;
+}
+
+// ================= input =================
+const keys = {};
+let locked = false, mouseDown = [false, false, false], craftOpen = false;
+addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (e.code >= 'Digit1' && e.code <= 'Digit9') { selSlot = Number(e.code.slice(5)) - 1; renderHotbar(); }
+  if (e.code === 'KeyC' || e.code === 'KeyE') { if (state === 'play') toggleCraft(); }
+  if (e.code === 'Escape' && craftOpen) toggleCraft();
+  if (e.code === 'Space' && locked) e.preventDefault();
+});
+addEventListener('keyup', (e) => { keys[e.code] = false; });
+addEventListener('wheel', (e) => { if (!locked) return; selSlot = (selSlot + (e.deltaY > 0 ? 1 : 8)) % 9; renderHotbar(); });
+document.addEventListener('mousemove', (e) => {
+  if (!locked) return;
+  player.yaw -= e.movementX * 0.0022; player.pitch -= e.movementY * 0.0022;
+  player.pitch = Math.max(-1.55, Math.min(1.55, player.pitch));
+});
+canvas.addEventListener('mousedown', (e) => { if (!locked) return; mouseDown[e.button] = true; if (e.button === 2) useItem(); });
+addEventListener('mouseup', (e) => { mouseDown[e.button] = false; breaking = null; });
+addEventListener('contextmenu', (e) => e.preventDefault());
+document.addEventListener('pointerlockchange', () => {
+  locked = document.pointerLockElement === canvas;
+  if (!locked && state === 'play' && !craftOpen) pause();
+});
+
+// ================= raycast =================
+function raycast(max = 5.5) {
+  const o = camera.position, d = new THREE.Vector3(); camera.getWorldDirection(d);
+  let x = Math.floor(o.x), y = Math.floor(o.y), z = Math.floor(o.z);
+  const sx = Math.sign(d.x), sy = Math.sign(d.y), sz = Math.sign(d.z);
+  const tdx = Math.abs(1 / d.x), tdy = Math.abs(1 / d.y), tdz = Math.abs(1 / d.z);
+  let tx = (sx > 0 ? x + 1 - o.x : o.x - x) * tdx, ty = (sy > 0 ? y + 1 - o.y : o.y - y) * tdy, tz = (sz > 0 ? z + 1 - o.z : o.z - z) * tdz;
+  let face = [0, 0, 0], t = 0;
+  while (t <= max) {
+    const b = getBlock(x, y, z);
+    if (b !== B.AIR && b !== B.WATER) return { x, y, z, b, face };
+    if (tx < ty && tx < tz) { x += sx; t = tx; tx += tdx; face = [-sx, 0, 0]; }
+    else if (ty < tz) { y += sy; t = ty; ty += tdy; face = [0, -sy, 0]; }
+    else { z += sz; t = tz; tz += tdz; face = [0, 0, -sz]; }
+  }
+  return null;
+}
+
+// ================= mining, placing, eating =================
+let breaking = null; // {x,y,z,t,need}
+function tool() { const s = inv[selSlot]; return s && ITEMS[s.id] && ITEMS[s.id].tier ? ITEMS[s.id] : null; }
+function breakTime(b) {
+  const def = BLOCKS[b]; if (!def || def.hard === Infinity) return Infinity;
+  const tl = tool(), needsPick = def.pick;
+  let t = def.hard * 1.4;
+  if (needsPick) t = tl ? (def.hard * 1.4) / tl.speed * 1.8 : def.hard * 5;
+  else if (tl && (b === B.LOG || b === B.PLANKS)) t /= 1.6;
+  return Math.max(0.12, t);
+}
+function updateBreaking(dt, hit) {
+  if (!mouseDown[0] || !hit) { breaking = null; crack.material.opacity = 0; return; }
+  if (!breaking || breaking.x !== hit.x || breaking.y !== hit.y || breaking.z !== hit.z) breaking = { x: hit.x, y: hit.y, z: hit.z, t: 0, need: breakTime(hit.b) };
+  breaking.t += dt;
+  crack.position.set(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5);
+  crack.material.opacity = Math.min(0.5, (breaking.t / breaking.need) * 0.5);
+  if (breaking.t >= breaking.need) {
+    const def = BLOCKS[hit.b], tl = tool();
+    setBlock(hit.x, hit.y, hit.z, B.AIR);
+    const canDrop = !def.pick || (tl && tl.tier >= def.pick);
+    if (canDrop) {
+      let drop = def.drop !== undefined ? def.drop : hit.b;
+      if (hit.b === B.LEAVES) drop = Math.random() < 0.1 ? I.APPLE : Math.random() < 0.25 ? B.LEAVES : 0;
+      if (drop) { addItem(drop, 1); flashLabel(`+1 ${nameOf(drop)}`); }
+    } else flashLabel(def.pick === 2 ? 'Needs a stone pickaxe' : 'Needs a pickaxe');
+    player.food = Math.max(0, player.food - 0.02);
+    breaking = null; crack.material.opacity = 0; renderHotbar();
+  }
+}
+function useItem() {
+  const s = inv[selSlot]; if (!s) return;
+  if (ITEMS[s.id] && ITEMS[s.id].food) {
+    if (player.food >= 20) { flashLabel("You're not hungry"); return; }
+    player.food = Math.min(20, player.food + ITEMS[s.id].food); take(s.id, 1); flashLabel(`Ate ${nameOf(s.id).toLowerCase()}`); renderHotbar(); renderStats(); return;
+  }
+  if (!BLOCKS[s.id]) return;
+  const hit = raycast(); if (!hit) return;
+  const x = hit.x + hit.face[0], y = hit.y + hit.face[1], z = hit.z + hit.face[2];
+  const cur = getBlock(x, y, z); if (cur !== B.AIR && cur !== B.WATER) return;
+  const p = player.pos;
+  if (x + 1 > p.x - PW && x < p.x + PW && y + 1 > p.y && y < p.y + PH && z + 1 > p.z - PW && z < p.z + PW) return;
+  setBlock(x, y, z, s.id); take(s.id, 1); renderHotbar();
+}
+
+// ================= HUD =================
+const $ = (s) => document.querySelector(s);
+function iconStyle(id, size) { const t = iconOf(id), sc = size / 16; return `background-image:url(${atlasURL});background-size:${128 * sc}px ${64 * sc}px;background-position:-${(t % 8) * 16 * sc}px -${Math.floor(t / 8) * 16 * sc}px`; }
+function slotHtml(s, i, size = 32, selected = false) { return `<div class="slot ${selected ? 'sel' : ''}" title="${s ? nameOf(s.id) : ''}">${s ? `<div class="ic" style="${iconStyle(s.id, size)}"></div>${s.n > 1 ? `<b>${s.n}</b>` : ''}` : ''}</div>`; }
+function renderHotbar() { $('#hotbar').innerHTML = inv.slice(0, 9).map((s, i) => slotHtml(s, i, 32, i === selSlot)).join(''); const s = inv[selSlot]; if (s) showLabel(nameOf(s.id)); }
+const HEART = (f) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 20'><path d='M11 18 2.5 9.6A5 5 0 0 1 11 3.4a5 5 0 0 1 8.5 6.2Z' fill='#3b1220'/>${f > 0 ? `<clipPath id='h'><rect width='${f >= 1 ? 22 : 11}' height='20'/></clipPath><path clip-path='url(#h)' d='M11 18 2.5 9.6A5 5 0 0 1 11 3.4a5 5 0 0 1 8.5 6.2Z' fill='#ff4f5e'/>` : ''}</svg>`)}`;
+const DRUM = (f) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 20'><path d='M4 7c0-3 14-3 14 0v6c0 3-14 3-14 0Z' fill='#3a2a12'/>${f > 0 ? `<clipPath id='d'><rect x='${f >= 1 ? 0 : 11}' width='22' height='20'/></clipPath><path clip-path='url(#d)' d='M4 7c0-3 14-3 14 0v6c0 3-14 3-14 0Z' fill='#e0a24a'/><ellipse clip-path='url(#d)' cx='11' cy='7' rx='7' ry='2' fill='#f6cf86'/>` : ''}</svg>`)}`;
+let lastStats = '';
+function renderStats() {
+  const h = Math.ceil(player.health), f = Math.ceil(player.food), sig = `${h}|${f}`;
+  if (sig === lastStats) return; lastStats = sig;
+  $('#hearts').innerHTML = Array.from({ length: 10 }, (_, i) => `<i style="background-image:url(&quot;${HEART(Math.max(0, Math.min(1, (h - i * 2) / 2)))}&quot;)"></i>`).join('');
+  $('#food').innerHTML = Array.from({ length: 10 }, (_, i) => `<i style="background-image:url(&quot;${DRUM(Math.max(0, Math.min(1, (f - (9 - i) * 2) / 2)))}&quot;)"></i>`).join('');
+}
+let labelTimer;
+function showLabel(t) { const l = $('#label'); l.textContent = t; l.classList.add('on'); clearTimeout(labelTimer); labelTimer = setTimeout(() => l.classList.remove('on'), 1400); }
+const flashLabel = showLabel;
+let toastTimer;
+function toast(t, ms = 2600) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), ms); }
+function hurtFlash() { const h = $('#hurt'); h.style.opacity = 1; setTimeout(() => (h.style.opacity = 0), 220); }
+
+// crafting
+function toggleCraft() {
+  craftOpen = !craftOpen;
+  $('#craft').hidden = !craftOpen;
+  if (craftOpen) { document.exitPointerLock(); renderCraft(); }
+  else canvas.requestPointerLock();
+}
+function renderCraft() {
+  $('#invgrid').innerHTML = inv.map((s, i) => slotHtml(s, i, 32, i === selSlot)).join('');
+  $('#recipes').innerHTML = RECIPES.map((r, i) => {
+    const ok = r.need.every(([id, n]) => count(id) >= n);
+    return `<div class="recipe ${ok ? '' : 'no'}">${slotHtml({ id: r.out, n: r.n }, 0, 24)}<div class="name">${nameOf(r.out)} ${r.n > 1 ? `x${r.n}` : ''}<div class="need">${r.need.filter(([, n]) => n).map(([id, n]) => `${n} ${nameOf(id).toLowerCase()}`).join(' + ')}</div></div><button class="btn" data-r="${i}" ${ok ? '' : 'disabled'}>Craft</button></div>`;
+  }).join('');
+  document.querySelectorAll('[data-r]').forEach((b) => b.onclick = () => {
+    const r = RECIPES[b.dataset.r];
+    if (!r.need.every(([id, n]) => count(id) >= n)) return;
+    r.need.forEach(([id, n]) => n && take(id, n)); addItem(r.out, r.n); renderCraft(); renderHotbar();
+  });
+  document.querySelectorAll('#invgrid .slot').forEach((el, i) => el.onclick = () => { if (i < 9) { selSlot = i; renderCraft(); renderHotbar(); } });
+}
+$('#craftclose').onclick = toggleCraft;
+
+// ================= time, saving, server =================
+let state = 'loading', secondsLeft = 0, unsent = 0, toward = 0, needed = 10, minutesPer = 1, freePlay = false, saveTimer = 0;
+function applyPlayInfo(r) { if (r.toward != null) toward = r.toward; if (r.needed) needed = r.needed; if (r.minutes) minutesPer = r.minutes; if (r.freePlay != null) freePlay = !!r.freePlay; }
+async function api(path, body) {
+  const r = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
+  return r.json();
+}
+function snapshot() {
+  return { version: 1, seed: SEED, mods, inv, selSlot, worldTime,
+    player: { x: player.pos.x, y: player.pos.y, z: player.pos.z, yaw: player.yaw, pitch: player.pitch, health: player.health, food: player.food, spawn: player.spawn } };
+}
+async function save() { try { await api('/api/game/save', snapshot()); } catch {} }
+function flushSpend() {
+  if (unsent < 0.05) return;
+  const s = Math.min(15, unsent); unsent -= s;
+  const wasFree = freePlay;
+  api('/api/game/spend', { seconds: freePlay ? 0 : s }).then((r) => {
+    applyPlayInfo(r);
+    if (wasFree && !freePlay) { secondsLeft = r.seconds; toast('Free play ended. The timer is running again.'); }
+    else if (!wasFree && freePlay) toast('Free play is on. Enjoy, no timer.');
+    else if (!freePlay) secondsLeft = Math.min(secondsLeft, r.seconds);
+  }).catch(() => {});
+}
+addEventListener('beforeunload', () => {
+  if (state === 'loading') return;
+  if (unsent > 0.05 && !freePlay) navigator.sendBeacon('/api/game/spend', new Blob([JSON.stringify({ seconds: Math.min(15, unsent) })], { type: 'application/json' }));
+  navigator.sendBeacon('/api/game/save', new Blob([JSON.stringify(snapshot())], { type: 'application/json' }));
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'play') { if (craftOpen) toggleCraft(); pause(); } });
+const fmt = (s) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s) % 60)).padStart(2, '0')}`;
+
+function overlay(html) { const o = $('#overlay'); o.hidden = !html; if (html) o.innerHTML = `<div class="panel">${html}</div>`; }
+const CONTROLS = `<div class="keys"><b>W A S D</b><span>Walk, Shift to sprint</span><b>Space</b><span>Jump, swim up</span><b>Mouse</b><span>Look around</span><b>Hold left click</b><span>Mine</span><b>Right click</b><span>Place a block or eat</span><b>1 to 9, scroll</b><span>Choose from your hotbar</span><b>C</b><span>Crafting</span><b>Esc</b><span>Pause (the timer stops)</span></div>`;
+const reward = () => (minutesPer === 1 ? 'minute' : `${minutesPer} minutes`);
+function progressHtml() { return `<div class="prog"><i style="width:${Math.min(100, (toward / needed) * 100)}%"></i></div><p>${toward}/${needed} correct answers to your next ${reward()}.</p>`; }
+function showMenu(title, sub) {
+  if (!freePlay && secondsLeft <= 0.5) return showLocked();
+  state = 'menu';
+  overlay(`<h1>Deepvale</h1><p>${sub || 'Your world is saved between sessions.'}</p><div class="big">${freePlay ? 'Free play' : fmt(secondsLeft)}</div><p>${freePlay ? 'no timer, your earned minutes are kept' : 'play time left'}</p>
+    <button class="btn" id="go">${title || 'Play'}</button>${CONTROLS}
+    <div class="small"><a id="newworld">Start a new world</a> &nbsp; <a href="/">Back to Claudemy</a></div>`);
+  $('#go').onclick = start;
+  $('#newworld').onclick = async () => { if (!confirm('Delete this world and start a new one? Your inventory goes too.')) return; await api('/api/game/new', {}); location.reload(); };
+}
+function showLocked(reason) {
+  state = 'locked';
+  overlay(`<h1>Deepvale</h1><h2>${reason || 'No play time left'}</h2><p>Every ${needed} ${needed === 1 ? 'question' : 'questions'} you answer correctly for your tutor in Claudemy ${needed === 1 ? 'earns' : 'earn'} ${minutesPer === 1 ? 'one minute' : `${minutesPer} minutes`} here. Done working? Switch on free play in Claudemy's Settings. Your world waits for you.</p>${progressHtml()}<a class="btn violet" href="/">Back to Claudemy</a><div class="small">This page checks for new play time every few seconds.</div>`);
+  setTimeout(recheck, 5000);
+}
+async function recheck() {
+  if (state !== 'locked') return;
+  try {
+    const r = await api('/api/game'); applyPlayInfo(r);
+    if (freePlay) { toast('Free play is on!'); showMenu('Play', 'Free play: no timer.'); return; }
+    if (r.seconds > 0.5) { secondsLeft = r.seconds; toast('Play time unlocked!'); showMenu('Play', 'You earned more play time.'); return; }
+  } catch {}
+  showLocked($('#overlay h2')?.textContent);
+}
+function start() {
+  overlay(null); state = 'play'; canvas.requestPointerLock(); last = performance.now();
+}
+function pause() {
+  if (state !== 'play') return;
+  flushSpend(); save();
+  showMenu('Resume', 'Paused. Your timer is stopped.');
+}
+function timeUp() {
+  state = 'locked'; mouseDown = [false, false, false]; if (craftOpen) { craftOpen = false; $('#craft').hidden = true; }
+  document.exitPointerLock(); flushSpend(); save();
+  showLocked("Time's up");
+}
+
+// ================= main loop =================
+let last = performance.now(), regen = 0, starve = 0, hungerClock = 0;
+const UP = new THREE.Vector3(0, 1, 0);
+function physics(dt) {
+  const p = player.pos;
+  const feet = getBlock(Math.floor(p.x), Math.floor(p.y + 0.1), Math.floor(p.z));
+  const body = getBlock(Math.floor(p.x), Math.floor(p.y + 0.9), Math.floor(p.z));
+  player.inWater = feet === B.WATER || body === B.WATER;
+  player.eyeInWater = getBlock(Math.floor(p.x), Math.floor(p.y + EYE), Math.floor(p.z)) === B.WATER;
+  const sprint = (keys.ShiftLeft || keys.ShiftRight) && player.food > 6 && !player.inWater;
+  const speed = player.inWater ? 2.6 : sprint ? 5.8 : 4.3;
+  const f = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0), s = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0);
+  const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw), rx = Math.cos(player.yaw), rz = -Math.sin(player.yaw);
+  let mx = fx * f + rx * s, mz = fz * f + rz * s; const ml = Math.hypot(mx, mz) || 1;
+  const accel = player.onGround ? 14 : player.inWater ? 6 : 4;
+  player.vel.x += ((mx / ml) * speed * (f || s ? 1 : 0) - player.vel.x) * Math.min(1, accel * dt);
+  player.vel.z += ((mz / ml) * speed * (f || s ? 1 : 0) - player.vel.z) * Math.min(1, accel * dt);
+  if (player.inWater) {
+    player.vel.y += -9 * dt; player.vel.y *= 1 - Math.min(1, 2.5 * dt);
+    if (keys.Space) player.vel.y = Math.min(player.vel.y + 22 * dt, 3.2);
+    player.fallFrom = null;
+  } else {
+    player.vel.y -= 28 * dt;
+    if (keys.Space && player.onGround) { player.vel.y = 8.6; player.onGround = false; }
+  }
+  player.vel.y = Math.max(player.vel.y, -50);
+  moveAxis('x', player.vel.x * dt); moveAxis('z', player.vel.z * dt);
+  const wasGround = player.onGround;
+  const hitY = moveAxis('y', player.vel.y * dt);
+  if (hitY) {
+    if (player.vel.y < 0) {
+      player.onGround = true;
+      if (player.fallFrom !== null) { const dist = player.fallFrom - p.y; if (dist > 3.5) damage(Math.floor(dist - 3)); }
+      player.fallFrom = null;
+    }
+    player.vel.y = 0;
+  } else {
+    player.onGround = false;
+    if (player.vel.y < 0 && player.fallFrom === null && !player.inWater) player.fallFrom = p.y;
+    if (player.vel.y > 0) player.fallFrom = null;
+  }
+  void wasGround;
+  if (p.y < -20) { damage(40); }
+  // hunger and health
+  hungerClock += dt * (sprint && (f || s) ? 3 : 1);
+  if (hungerClock > 30) { hungerClock = 0; player.food = Math.max(0, player.food - 1); }
+  if (player.food >= 17 && player.health < 20) { regen += dt; if (regen > 3) { regen = 0; player.health = Math.min(20, player.health + 1); player.food = Math.max(0, player.food - 0.25); } }
+  if (player.food <= 0) { starve += dt; if (starve > 4) { starve = 0; damage(1); } }
+  if (player.eyeInWater) { player.air = (player.air ?? 15) - dt; if (player.air < 0) { player.air = 1; damage(2); } } else player.air = 15;
+}
+function damage(n) {
+  player.health -= n; hurtFlash();
+  if (player.health <= 0) {
+    player.health = 20; player.food = 20; player.vel.set(0, 0, 0); player.fallFrom = null;
+    const s = player.spawn; player.pos.set(s.x, s.y, s.z);
+    toast('You passed out and woke up at your spawn point. Your inventory is safe.', 4000);
+  }
+}
+function sky(dt) {
+  worldTime = (worldTime + dt / DAY_SECONDS) % 1;
+  const ang = worldTime * Math.PI * 2;
+  const sunH = Math.sin(ang);
+  const day = Math.max(0, Math.min(1, sunH * 2.2 + 0.35));
+  const night = [0.03, 0.05, 0.12], noon = [0.56, 0.78, 1.0], dusk = [0.95, 0.55, 0.35];
+  const duskK = Math.max(0, 1 - Math.abs(sunH) * 4) * (day > 0.05 ? 1 : 0.3);
+  const c = noon.map((v, i) => night[i] + (v - night[i]) * day).map((v, i) => v + (dusk[i] - v) * duskK * 0.55);
+  const water = player.eyeInWater;
+  const col = water ? new THREE.Color(0.12, 0.25, 0.5) : new THREE.Color(c[0], c[1], c[2]);
+  renderer.setClearColor(col); scene.fog.color.copy(col);
+  scene.fog.near = water ? 1 : 30; scene.fog.far = water ? 18 : RADIUS * CS - 6;
+  const light = 0.22 + 0.78 * day;
+  matSolid.color.setRGB(light, light * (1 - duskK * 0.08), light * (1 - duskK * 0.15));
+  matWater.color.copy(matSolid.color); matGlass.color.copy(matSolid.color);
+  skyGroup.position.copy(camera.position);
+  sun.position.set(Math.cos(ang) * 240, sunH * 240, -60); sun.lookAt(camera.position);
+  moon.position.set(-Math.cos(ang) * 240, -sunH * 240, 60); moon.lookAt(camera.position);
+  stars.material.opacity = Math.max(0, 1 - day * 1.6);
+  $('#water').style.opacity = water ? 1 : 0;
+}
+let infoClock = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  updateChunks(state === 'play' ? 2 : 4);
+  if (state === 'play') {
+    physics(dt);
+    unsent += dt;
+    if (!freePlay) secondsLeft -= dt;
+    if (unsent >= (freePlay ? 15 : 5)) flushSpend();
+    saveTimer += dt; if (saveTimer > 20) { saveTimer = 0; save(); }
+    if (!freePlay && secondsLeft <= 0) timeUp();
+    const t = $('#timer'); $('#tleft').textContent = freePlay ? 'Free play' : fmt(secondsLeft); t.classList.toggle('low', !freePlay && secondsLeft < 10);
+  }
+  camera.position.set(player.pos.x, player.pos.y + EYE, player.pos.z);
+  camera.rotation.set(player.pitch, player.yaw, 0, 'YXZ');
+  sky(state === 'play' ? dt : 0);
+  const hit = state === 'play' && !craftOpen ? raycast() : null;
+  sel.visible = !!hit; if (hit) sel.position.set(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5);
+  if (state === 'play' && !craftOpen) updateBreaking(dt, hit);
+  renderStats();
+  infoClock += dt; if (infoClock > 0.5) { infoClock = 0; const p = player.pos; const hrs = Math.floor((worldTime * 24 + 6) % 24); $('#info').textContent = `x ${p.x.toFixed(0)}  y ${p.y.toFixed(0)}  z ${p.z.toFixed(0)}   ${String(hrs).padStart(2, '0')}:00`; }
+  renderer.render(scene, camera);
+}
+
+// ================= boot =================
+(async function boot() {
+  let r;
+  try { r = await api('/api/game'); } catch { overlay('<h1>Deepvale</h1><h2>Claudemy is not running</h2><p>Start Claudemy and open this page from it.</p>'); return; }
+  secondsLeft = r.seconds; applyPlayInfo(r);
+  const s = r.save;
+  if (s) {
+    SEED = s.seed; mods = s.mods || {}; inv = (s.inv || []).concat(new Array(27).fill(null)).slice(0, 27); selSlot = s.selSlot || 0; worldTime = s.worldTime ?? 0.3;
+    const p = s.player; player.pos.set(p.x, p.y, p.z); player.yaw = p.yaw; player.pitch = p.pitch; player.health = p.health; player.food = p.food; player.spawn = p.spawn;
+  } else {
+    SEED = (Math.random() * 1e9) | 0;
+    const sp = findSpawn(); player.spawn = sp; player.pos.set(sp.x, sp.y, sp.z);
+    addItem(I.APPLE, 3);
+  }
+  if (!player.spawn) player.spawn = findSpawn();
+  // build the area around the player before showing it
+  for (let i = 0; i < 12; i++) updateChunks(40);
+  while (collides(player.pos) && player.pos.y < H) player.pos.y += 1;
+  renderHotbar(); renderStats();
+  requestAnimationFrame(frame);
+  if (!freePlay && secondsLeft <= 0.5) showLocked();
+  else showMenu(s ? 'Continue' : 'Play', s ? 'Welcome back. Your world is just as you left it.' : 'A new world, generated just for you.');
+  if (!s) save();
+})();
+</script>
+</body>
+</html>

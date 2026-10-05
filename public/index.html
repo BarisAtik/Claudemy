@@ -1,0 +1,1749 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claudemy</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23D97757'/><path d='M44 22.5a15 15 0 1 0 0 19' fill='none' stroke='%23FAF9F5' stroke-width='8' stroke-linecap='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --night: #1F1E1D; --deck: #2A2927; --raised: #34332F; --line: #44423D; --ink: #F5F4EF; --muted: #B5B2A8;
+  --violet: #D97757; --violet-d: #A9573D; --gold: #FFC53D; --gold-d: #C98A00; --coral: #E5534B; --coral-d: #B33A33;
+  --mint: #2EE6A6; --mint-d: #12A577; --sky: #E8A87C; --sky-d: #B97A52;
+  --lv0: #4A4842; --lv1: var(--sky); --lv2: var(--mint); --lv3: var(--violet); --lv4: var(--gold);
+  --display: 'Lilita One', 'Arial Rounded MT Bold', 'Segoe UI Black', system-ui, sans-serif;
+  --ui: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--night); color: var(--ink); font: 700 15px/1.5 var(--ui); -webkit-font-smoothing: antialiased; min-height: 100vh;
+  background-image: radial-gradient(circle at 15% -15%, rgba(217,119,87,.16), transparent 45%), radial-gradient(circle at 110% 30%, rgba(232,168,124,.05), transparent 40%); background-attachment: fixed; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+[hidden] { display: none !important; }
+
+/* chunky 3D buttons */
+.btn { --c: var(--violet); --d: var(--violet-d); --t: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 0; border-radius: 16px; padding: 14px 22px; background: var(--c); color: var(--t); font: 900 15px/1 var(--ui); letter-spacing: .02em;
+  box-shadow: 0 5px 0 var(--d); cursor: pointer; transition: transform .08s, box-shadow .08s, filter .15s; text-transform: uppercase; }
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: translateY(5px); box-shadow: 0 0 0 var(--d); }
+.btn:disabled { --c: var(--raised); --d: #2A2927; --t: var(--muted); cursor: not-allowed; filter: none; }
+.btn.gold { --c: var(--gold); --d: var(--gold-d); --t: #2A1B00; }
+.btn.mint { --c: var(--mint); --d: var(--mint-d); --t: #003222; }
+.btn.coral { --c: var(--coral); --d: var(--coral-d); }
+.btn.ghost { --c: transparent; --d: transparent; --t: var(--muted); box-shadow: none; border: 2px solid var(--line); }
+.btn.ghost:active { transform: none; }
+.btn.big { padding: 18px 28px; font-size: 17px; border-radius: 18px; }
+.btn.wide { width: 100%; }
+
+/* top bar */
+.bar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 22px; padding: 12px 28px; background: rgba(31,30,29,.88); backdrop-filter: blur(10px); border-bottom: 2px solid var(--line); }
+.logo { font: 600 30px/1 'Newsreader', Georgia, 'Times New Roman', serif; letter-spacing: -0.02em; color: var(--violet); }
+
+.tabs { display: flex; gap: 6px; }
+.tabs button { background: none; border: 2px solid transparent; border-radius: 12px; padding: 8px 14px; color: var(--muted); font-weight: 900; letter-spacing: .03em; text-transform: uppercase; font-size: 13px; cursor: pointer; }
+.tabs button[aria-current="page"] { color: var(--sky); border-color: var(--sky); background: rgba(232,168,124,.08); }
+.stats { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.chip { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 12px; font: 900 16px/1 var(--ui); }
+.chip svg { width: 22px; height: 22px; }
+.chip.streak { color: var(--coral); } .chip.streak.cold { color: var(--muted); }
+.chip.xp { color: var(--gold); }
+.chip.play { color: var(--mint); text-decoration: none; border: 2px solid transparent; border-radius: 12px; }
+.chip.play:hover { border-color: var(--mint); }
+.chip.play small { font-size: 11px; color: var(--muted); font-weight: 800; }
+.iconbtn { background: none; border: 2px solid var(--line); border-radius: 12px; width: 40px; height: 38px; display: grid; place-items: center; color: var(--muted); cursor: pointer; }
+.iconbtn svg { width: 20px; height: 20px; }
+.cli { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); padding-left: 6px; }
+.cli .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.cli.ok .dot { background: var(--mint); box-shadow: 0 0 10px var(--mint); } .cli.bad .dot { background: var(--coral); }
+
+main { max-width: 1360px; margin: 0 auto; padding: 28px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 32px; align-items: start; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1fr auto; gap: 18px; background: linear-gradient(135deg, #3B2B23, #2A2522 55%, #4A2C20); border-radius: 26px; padding: 24px 26px; box-shadow: 0 6px 0 #151413; position: relative; overflow: hidden; }
+.hero::after { content: ''; position: absolute; right: -60px; top: -60px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(255,197,61,.35), transparent 65%); pointer-events: none; }
+.rankrow { display: flex; align-items: center; gap: 18px; }
+.emblem { width: 84px; height: 92px; flex: none; filter: drop-shadow(0 5px 0 rgba(0,0,0,.35)); }
+.rank-label { font-size: 13px; color: #D6CFC2; font-weight: 800; }
+.rank-name { font: 38px/1 var(--display); margin: 2px 0 10px; background: linear-gradient(90deg, #fff, var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.xpbar { height: 16px; background: rgba(0,0,0,.3); border-radius: 10px; overflow: hidden; width: min(420px, 100%); }
+.xpbar i { display: block; height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--gold), #FFE08A); box-shadow: inset 0 -4px 0 rgba(0,0,0,.12); transition: width .8s cubic-bezier(.2,.9,.3,1.2); }
+.xpnote { font-size: 13px; color: #D6CFC2; margin-top: 7px; }
+.goal { display: grid; justify-items: center; align-content: center; gap: 4px; position: relative; z-index: 1; }
+.goal svg { width: 96px; height: 96px; transform: rotate(-90deg); }
+.goal .num { position: absolute; top: 30px; font: 22px/1 var(--display); }
+.goal .lbl { font-size: 12px; color: #D6CFC2; }
+
+.review { margin: 22px 0 8px; display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-radius: 20px; border: 2px solid var(--line); background: var(--deck); }
+.review p { margin: 0; flex: 1; color: var(--muted); }
+.review strong { color: var(--ink); display: block; font-size: 17px; }
+
+/* quest path */
+.unit { margin-top: 34px; }
+.unit-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-radius: 20px; box-shadow: 0 5px 0 rgba(0,0,0,.35); }
+.unit-head h2 { margin: 0; font: 24px/1.1 var(--display); letter-spacing: .01em; }
+.unit-head span { font-size: 13px; opacity: .9; }
+.path { position: relative; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 30px 0 8px; }
+.node-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
+.node { --c: var(--lv0); width: 84px; height: 84px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; position: relative;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--c) 82%, #fff), var(--c) 70%); box-shadow: 0 7px 0 color-mix(in srgb, var(--c) 55%, #000); transition: transform .1s; }
+.node:active { transform: translateY(5px); box-shadow: 0 2px 0 color-mix(in srgb, var(--c) 55%, #000); }
+.node svg { width: 38px; height: 38px; }
+.node-ring { position: absolute; inset: -9px; border-radius: 50%; background: conic-gradient(var(--c) calc(var(--p) * 1turn), rgba(255,255,255,.08) 0); -webkit-mask: radial-gradient(circle, transparent 47px, #000 48px); mask: radial-gradient(circle, transparent 47px, #000 48px); }
+.node[aria-pressed="true"] { outline: 4px solid #fff; outline-offset: 10px; }
+.node-name { max-width: 190px; text-align: center; font-size: 14px; font-weight: 800; line-height: 1.25; }
+.node-lvl { font-size: 12px; color: var(--muted); font-weight: 800; }
+.bubble { position: absolute; top: -40px; background: var(--gold); color: #2A1B00; font: 900 12px/1 var(--ui); padding: 7px 10px; border-radius: 10px; text-transform: uppercase; letter-spacing: .04em; box-shadow: 0 3px 0 var(--gold-d); white-space: nowrap; z-index: 2; }
+.bubble::after { content: ''; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 6px solid transparent; border-bottom: 0; border-top-color: var(--gold); }
+.bubble.bob { animation: bob 1.6s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-5px); } }
+
+.addform { display: grid; grid-template-columns: 1fr 170px auto; gap: 10px; margin-top: 40px; padding: 18px; border-radius: 20px; border: 2px dashed var(--line); }
+input[type=text], textarea, select { width: 100%; background: var(--deck); border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px; font-weight: 700; }
+input::placeholder, textarea::placeholder { color: #8A867C; }
+textarea { resize: vertical; line-height: 1.55; }
+
+/* side panel */
+.side { position: sticky; top: 90px; background: var(--deck); border: 2px solid var(--line); border-radius: 26px; max-height: calc(100vh - 116px); display: flex; flex-direction: column; overflow: hidden; }
+.side .empty { padding: 34px 28px; text-align: center; color: var(--muted); }
+.side .empty svg { width: 96px; height: 96px; margin-bottom: 10px; }
+.side .empty strong { display: block; color: var(--ink); font: 22px/1.2 var(--display); margin-bottom: 6px; }
+.shead { padding: 22px 22px 16px; text-align: center; }
+.shead .node { margin: 6px auto 14px; cursor: default; }
+.shead h2 { margin: 0 0 4px; font: 25px/1.15 var(--display); }
+.shead .facts { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+.ladder { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 16px; }
+.ladder div { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .03em; padding: 6px 0; border-radius: 8px; background: var(--raised); color: #8A867C; }
+.ladder div.on { color: #1F1E1D; }
+.stabs { display: flex; border-top: 2px solid var(--line); border-bottom: 2px solid var(--line); }
+.stabs button { flex: 1; background: none; border: 0; padding: 11px 6px; color: var(--muted); font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: .03em; cursor: pointer; }
+.stabs button[aria-selected="true"] { color: var(--sky); box-shadow: inset 0 -3px 0 var(--sky); }
+.sbody { padding: 18px 20px; overflow-y: auto; flex: 1; }
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 90%; padding: 11px 14px; border-radius: 18px; line-height: 1.55; font-weight: 700; }
+.msg p { margin: 0 0 .5em; } .msg p:last-child { margin: 0; }
+.msg ul, .msg ol { margin: 0 0 .5em; padding-left: 20px; }
+.msg.user { align-self: flex-end; background: var(--violet); border-bottom-right-radius: 6px; }
+.msg.tutor { align-self: flex-start; background: var(--raised); border-bottom-left-radius: 6px; display: flex; gap: 10px; }
+.msg.tutor .av { width: 30px; height: 30px; flex: none; }
+.msg code, .qtext code, .sheet code { font-family: Consolas, monospace; font-size: .88em; background: rgba(0,0,0,.25); padding: 1px 6px; border-radius: 6px; }
+.msg pre, .sheet pre { background: rgba(0,0,0,.3); padding: 10px; border-radius: 10px; overflow-x: auto; font-size: 13px; }
+.composer { border-top: 2px solid var(--line); padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.composer textarea { min-height: 48px; max-height: 150px; }
+.composer .btn { padding: 14px 16px; }
+.hint { color: var(--muted); font-size: 13.5px; }
+.wait { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+.spin { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--sky); animation: spin .7s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.entry { padding: 12px 0; border-top: 2px solid var(--line); }
+.entry .kind { display: inline-block; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; padding: 3px 8px; border-radius: 8px; background: var(--raised); color: var(--sky); margin-right: 8px; }
+.entry .when { font-size: 12px; color: var(--muted); }
+.entry p { margin: 6px 0 0; font-weight: 600; }
+
+/* full-screen lesson */
+.lesson { position: fixed; inset: 0; z-index: 30; background: var(--night); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.lhead { display: flex; align-items: center; gap: 18px; padding: 20px 28px; max-width: 1000px; width: 100%; margin: 0 auto; }
+.lhead .close { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 6px; }
+.lhead .close svg { width: 26px; height: 26px; }
+.lprog { flex: 1; height: 18px; border-radius: 10px; background: var(--raised); overflow: hidden; }
+.lprog i { display: block; height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--mint), #8BF5CF); box-shadow: inset 0 -5px 0 rgba(0,0,0,.12); transition: width .5s cubic-bezier(.2,.9,.3,1.2); }
+.lbody { overflow-y: auto; padding: 10px 28px 40px; }
+.lcol { max-width: 720px; margin: 0 auto; }
+.qchip { display: inline-flex; align-items: center; gap: 8px; color: var(--violet); background: rgba(217,119,87,.14); padding: 7px 12px; border-radius: 12px; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 14px; }
+.lconcept { color: var(--muted); font-size: 14px; margin-bottom: 6px; }
+.qtext { font-size: 25px; line-height: 1.4; font-weight: 800; margin: 0 0 24px; }
+.qtext p { margin: 0 0 .5em; }
+.qtext pre { background: rgba(0,0,0,.35); border: 2px solid var(--line); border-radius: 14px; padding: 14px 16px; overflow-x: auto; font-size: 15px; line-height: 1.5; margin: 6px 0 12px; }
+.qtext pre code { background: none; padding: 0; font-size: inherit; }
+.lesson textarea { min-height: 190px; font-size: 18px; border-radius: 18px; padding: 18px; }
+.lfoot { border-top: 2px solid var(--line); }
+.lfoot-in { max-width: 1000px; margin: 0 auto; padding: 22px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.sheet { border-top: 0; }
+.sheet.pass { background: #10372E; } .sheet.retry { background: #3A2E0E; } .sheet.fail { background: #3D1620; }
+.sheet .verdict { display: flex; align-items: center; gap: 16px; }
+.sheet .verdict .ico { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.sheet.pass .ico { background: var(--mint); } .sheet.retry .ico { background: var(--gold); } .sheet.fail .ico { background: var(--coral); }
+.sheet .ico svg { width: 36px; height: 36px; }
+.sheet h3 { margin: 0; font: 28px/1.1 var(--display); }
+.sheet.pass h3 { color: var(--mint); } .sheet.retry h3 { color: var(--gold); } .sheet.fail h3 { color: var(--coral); }
+.sheet .sub { color: var(--ink); opacity: .9; margin-top: 4px; max-width: 60ch; }
+.sheet-details { max-width: 1000px; margin: 0 auto; padding: 0 28px; max-height: 30vh; overflow-y: auto; }
+.points { list-style: none; padding: 0; margin: 0 0 10px; }
+.points li { padding: 6px 0 6px 28px; position: relative; font-weight: 700; }
+.points li::before { position: absolute; left: 0; top: 5px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 900; }
+.points.hit li::before { content: '✓'; background: var(--mint); color: #003222; }
+.points.missed li::before { content: '!'; background: var(--gold); color: #2A1B00; }
+.modelans { background: rgba(0,0,0,.25); border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; }
+.modelans b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 4px; }
+.xpgain { font: 30px/1 var(--display); color: var(--gold); text-shadow: 0 3px 0 var(--gold-d); white-space: nowrap; }
+.loadcard { text-align: center; padding-top: 12vh; }
+.loadcard svg { width: 130px; height: 130px; animation: pulse 1.4s ease-in-out infinite; }
+.loadcard h2 { font: 30px/1.2 var(--display); margin: 18px 0 6px; }
+@keyframes pulse { 50% { transform: scale(1.08); filter: drop-shadow(0 0 22px rgba(217,119,87,.8)); } }
+.error { color: var(--coral); font-weight: 800; }
+
+/* modal + celebrations */
+.modal { position: fixed; inset: 0; z-index: 40; background: rgba(15,14,13,.84); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 20px; }
+.mcard { background: var(--deck); border: 2px solid var(--line); border-radius: 30px; padding: 34px 32px 28px; width: min(460px, 100%); text-align: center; box-shadow: 0 10px 0 #121110; animation: pop .45s cubic-bezier(.2,1.4,.4,1); }
+@keyframes pop { from { transform: scale(.7); opacity: 0; } }
+.mcard .kicker { font: 900 13px/1 var(--ui); color: var(--sky); text-transform: uppercase; letter-spacing: .14em; margin-bottom: 14px; }
+.mcard h2 { font: 40px/1.05 var(--display); margin: 14px 0 8px; }
+.mcard p { color: var(--muted); margin: 0 0 22px; }
+.mcard .art { width: 140px; height: 140px; margin: 0 auto; filter: drop-shadow(0 8px 0 rgba(0,0,0,.35)); }
+.mcard .row { display: grid; gap: 10px; }
+.shine { background: linear-gradient(90deg, #fff, var(--gold), #fff); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 2.2s linear infinite; }
+@keyframes shine { to { background-position: -200% 0; } }
+
+
+/* projects */
+.phead-row { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.phead-row h1 { font: 40px/1 var(--display); margin: 0 0 8px; }
+.phead-row p { margin: 0; color: var(--muted); max-width: 64ch; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.pcard { text-align: left; border: 2px solid var(--line); background: var(--deck); border-radius: 22px; padding: 18px 18px 16px; cursor: pointer; color: var(--ink); box-shadow: 0 5px 0 #151413; transition: transform .1s, border-color .15s; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pcard:hover { transform: translateY(-2px); }
+.pcard:active { transform: translateY(3px); box-shadow: 0 2px 0 #151413; }
+.pcard.idle { filter: saturate(.2); opacity: .78; }
+.pcard.idle:hover { filter: none; opacity: 1; }
+.pcard.live { border-color: var(--mint); box-shadow: 0 5px 0 var(--mint-d), 0 0 30px rgba(46,230,166,.18); }
+.pstatus { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.pcard.live .pstatus, .pill.live { color: var(--mint); }
+.pdot { width: 10px; height: 10px; border-radius: 50%; background: #6B6860; }
+.live .pdot { background: var(--mint); box-shadow: 0 0 0 4px rgba(46,230,166,.2); animation: live 1.8s ease-in-out infinite; }
+@keyframes live { 50% { box-shadow: 0 0 0 8px rgba(46,230,166,0); } }
+.pname { font: 24px/1.1 var(--display); overflow-wrap: anywhere; }
+.ppath { font: 600 12px/1.4 Consolas, monospace; color: var(--muted); overflow-wrap: anywhere; }
+.pmeta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.pmeta b { color: var(--gold); }
+.pempty { background: var(--deck); border: 2px dashed var(--line); border-radius: 22px; padding: 30px; color: var(--muted); max-width: 720px; }
+.pempty strong { color: var(--ink); display: block; font: 22px/1.2 var(--display); margin-bottom: 6px; }
+.pdetail { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 28px; align-items: start; }
+.backbtn { background: none; border: 0; color: var(--sky); font-weight: 900; text-transform: uppercase; letter-spacing: .04em; font-size: 13px; cursor: pointer; padding: 0; margin-bottom: 14px; }
+.ptitle { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.ptitle h1 { font: 42px/1 var(--display); margin: 8px 0 6px; overflow-wrap: anywhere; }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.pcol > .card + .card, .pcol > section + section { margin-top: 18px; }
+.lead { font-size: 17px; line-height: 1.6; margin: 0 0 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.tag { display: inline-block; padding: 5px 10px; border-radius: 10px; background: var(--raised); font-size: 12.5px; font-weight: 800; color: var(--ink); }
+.tag.changed { background: rgba(255,197,61,.16); color: var(--gold); }
+.tag.code { font-family: Consolas, monospace; font-weight: 600; font-size: 12px; color: var(--sky); }
+.subhead { font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; color: var(--sky); margin: 16px 0 6px; }
+.techs { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.tech { background: var(--raised); border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.tech b { font: 19px/1.15 var(--display); }
+.tech p { margin: 0; font-size: 14px; }
+.tech .why { color: var(--muted); font-weight: 600; }
+.tech .btn { align-self: flex-start; margin-top: 6px; }
+.btn.small { padding: 9px 12px; font-size: 12px; border-radius: 12px; box-shadow: 0 3px 0 var(--d); }
+.risks { margin: 0; padding-left: 20px; }
+.risks li { margin-bottom: 6px; }
+.tree { font-size: 14.5px; }
+.tree details > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; }
+.tree details > summary::-webkit-details-marker { display: none; }
+.tree details > summary:hover { background: var(--raised); }
+.tree summary .chev { width: 14px; height: 14px; flex: none; color: var(--muted); transition: transform .15s; }
+.tree details[open] > summary .chev { transform: rotate(90deg); }
+.tree .ico { width: 18px; height: 18px; flex: none; }
+.tkids { margin-left: 15px; padding-left: 10px; border-left: 2px solid var(--line); }
+.tcount { margin-left: auto; font-size: 12px; color: var(--muted); }
+.tdot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); flex: none; }
+.tfile > summary span.fname { overflow-wrap: anywhere; }
+.tbody { margin: 2px 0 8px 30px; padding: 12px 14px; background: var(--raised); border-radius: 14px; font-weight: 600; }
+.tbody p { margin: 0 0 8px; }
+.tbody .tpath { font: 600 12px/1.4 Consolas, monospace; color: var(--muted); margin-bottom: 6px; overflow-wrap: anywhere; }
+.trow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.sess { padding: 12px 0; border-top: 2px solid var(--line); }
+.sess:first-of-type { border-top: 0; }
+.sess .when { font-size: 12px; color: var(--muted); font-weight: 800; }
+.sess .ask { margin: 4px 0 8px; font-weight: 700; }
+.pchat { position: sticky; top: 90px; background: var(--deck); border: 2px solid var(--line); border-radius: 26px; height: calc(100vh - 116px); display: flex; flex-direction: column; overflow: hidden; }
+.pchat-head { padding: 16px 18px 12px; border-bottom: 2px solid var(--line); display: flex; gap: 12px; align-items: center; }
+.pchat-head svg { width: 42px; height: 42px; flex: none; }
+.pchat-head b { display: block; font: 21px/1.1 var(--display); }
+.pchat-head span { font-size: 12.5px; color: var(--muted); }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 18px 0; }
+.quick button { border: 2px solid var(--line); background: none; color: var(--ink); border-radius: 12px; padding: 7px 10px; font-size: 12.5px; font-weight: 800; cursor: pointer; text-align: left; }
+.quick button:hover { border-color: var(--sky); color: var(--sky); }
+.pchat .sbody { flex: 1; }
+.busycard { display: flex; gap: 16px; align-items: center; }
+.busycard svg { width: 70px; height: 70px; flex: none; animation: pulse 1.4s ease-in-out infinite; }
+@media (max-width: 1100px) { .pdetail { grid-template-columns: 1fr; } .pchat { position: static; height: 640px; } }
+
+/* quiz packs */
+.count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px; border-radius: 10px; background: var(--coral); color: #fff; font-size: 11px; vertical-align: 1px; }
+.packgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.pack { background: var(--deck); border: 2px solid var(--line); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 5px 0 #151413; }
+.pack.tech { border-top: 6px solid var(--sky); }
+.pack.stakeholder { border-top: 6px solid var(--gold); }
+.kindtag { align-self: flex-start; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; padding: 5px 9px; border-radius: 8px; }
+.kindtag.kt-tech { background: rgba(232,168,124,.15); color: var(--sky); }
+.kindtag.kt-stakeholder { background: rgba(255,197,61,.15); color: var(--gold); }
+.pack h3 { margin: 0; font: 22px/1.15 var(--display); }
+.pack .meta { font-size: 13px; color: var(--muted); }
+.pbar { height: 12px; background: var(--raised); border-radius: 8px; overflow: hidden; }
+.pbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--mint), #8BF5CF); border-radius: 8px; }
+.pack .actions { display: flex; gap: 8px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+.pack .actions .spacer { flex: 1; }
+.linkbtn { background: none; border: 0; color: var(--muted); font-weight: 800; font-size: 12.5px; cursor: pointer; padding: 4px; }
+.linkbtn:hover { color: var(--coral); }
+.persona { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.persona .face { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font: 20px/1 var(--display); color: #2A1B00; background: var(--gold); box-shadow: 0 4px 0 var(--gold-d); flex: none; }
+.persona b { display: block; font: 18px/1.1 var(--display); }
+.persona span { font-size: 12.5px; color: var(--muted); }
+.ctx { margin: 18px 0; background: var(--deck); border: 2px solid var(--line); border-radius: 16px; }
+.ctx summary { cursor: pointer; padding: 12px 16px; font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--sky); }
+.ctx .inner { padding: 0 16px 14px; font-weight: 600; max-height: 40vh; overflow-y: auto; }
+.ctx .inner pre { background: rgba(0,0,0,.3); padding: 10px; border-radius: 10px; overflow-x: auto; font-size: 13px; }
+.lbody.withhelp { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; max-width: 1240px; margin: 0 auto; width: 100%; overflow: hidden; height: 100%; padding-bottom: 16px; }
+.lbody.withhelp > div:first-child { overflow-y: auto; min-height: 0; padding-right: 6px; }
+.lbody.withhelp .lcol { margin: 0; }
+.helpdrawer textarea { min-height: 48px; font-size: 15px; border-radius: 14px; padding: 12px 14px; }
+.helpdrawer { background: var(--deck); border: 2px solid var(--line); border-radius: 22px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.helpdrawer .hhead { padding: 14px 16px; border-bottom: 2px solid var(--line); display: flex; align-items: center; gap: 10px; }
+.helpdrawer .hhead svg { width: 34px; height: 34px; }
+.helpdrawer .hhead b { font: 19px/1.1 var(--display); flex: 1; }
+.helpdrawer .sbody { flex: 1; overflow-y: auto; padding: 14px 16px; }
+.helpbtn { margin-left: 4px; }
+.scorelist { list-style: none; padding: 0; margin: 18px auto 0; max-width: 620px; text-align: left; }
+.scorelist li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 2px solid var(--line); font-weight: 700; }
+.scorelist b { min-width: 52px; font: 20px/1 var(--display); }
+.explain { background: rgba(0,0,0,.22); border-left: 4px solid var(--sky); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; }
+.explain b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--sky); margin-bottom: 4px; }
+@media (max-width: 1020px) { .lbody.withhelp { grid-template-columns: 1fr; overflow-y: auto; height: auto; } .lbody.withhelp > div:first-child { overflow: visible; } .helpdrawer { height: 480px; } }
+
+/* companion */
+.vtabs, .ctabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 18px; }
+.vtabs button, .ctabs button { background: none; border: 0; padding: 10px 12px; color: var(--muted); font-weight: 900; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-bottom: -2px; border-bottom: 3px solid transparent; }
+.vtabs button[aria-selected="true"], .ctabs button[aria-selected="true"] { color: var(--sky); border-bottom-color: var(--sky); }
+.ctabs { margin: 0; padding: 6px 12px 0; }
+.ctabs svg { width: 22px; height: 22px; }
+.coach { position: sticky; top: 90px; background: var(--deck); border: 2px solid var(--line); border-radius: 26px; height: calc(100vh - 116px); display: flex; flex-direction: column; overflow: hidden; }
+.cbody { flex: 1; overflow-y: auto; padding: 16px 18px; min-height: 0; }
+.livebar { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.livebar select { background: var(--deck); border: 2px solid var(--line); border-radius: 12px; padding: 9px 12px; font-weight: 800; max-width: 100%; flex: 1 1 280px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--mint); }
+.feed { display: flex; flex-direction: column; gap: 16px; }
+.turn { background: var(--deck); border: 2px solid var(--line); border-radius: 22px; padding: 16px 18px; }
+.turn.running { border-color: var(--mint); box-shadow: 0 0 24px rgba(46,230,166,.12); }
+.turn header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+.turn .ask { font-size: 16.5px; font-weight: 800; margin-bottom: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.xbox { background: var(--raised); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+.xbox.pending { padding: 10px 14px; }
+.xrow { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.xrow:first-child { border-top: 0; }
+.xrow b { font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; color: var(--sky); padding-top: 2px; }
+.xrow:first-child b { color: var(--mint); }
+.xrow p { margin: 0; font-weight: 600; }
+.terms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.term { font-size: 12.5px; background: rgba(0,0,0,.22); border-radius: 10px; padding: 6px 10px; font-weight: 600; color: var(--muted); max-width: 100%; }
+.term b { color: var(--gold); }
+.xactions { margin-top: 10px; }
+.pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--mint); animation: live 1.4s ease-in-out infinite; box-shadow: 0 0 0 4px rgba(46,230,166,.25); flex: none; }
+.steps > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 800; font-size: 13.5px; padding: 4px 0; }
+.steps > summary::-webkit-details-marker { display: none; }
+.steps[open] > summary .chev { transform: rotate(90deg); }
+.steps .chev { width: 14px; height: 14px; transition: transform .15s; }
+.stepsin { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--line); }
+.say { font-size: 14px; color: #DAD6CC; font-weight: 600; }
+.say p { margin: 0 0 6px; } .say p:last-child { margin: 0; }
+.step { background: rgba(0,0,0,.18); border-radius: 12px; }
+.step > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13.5px; font-weight: 700; min-width: 0; }
+.step > summary::-webkit-details-marker { display: none; }
+.step > summary code { font-family: Consolas, monospace; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.step .ico { width: 16px; height: 16px; }
+.sverb { color: var(--sky); font-weight: 900; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.step .prompt { color: var(--mint); font-family: Consolas, monospace; font-weight: 900; }
+.step pre { margin: 0 12px 10px; }
+pre.diff, pre.out { font: 12.5px/1.5 Consolas, monospace; padding: 10px 12px; border-radius: 10px; overflow-x: auto; white-space: pre; max-height: 320px; overflow-y: auto; background: rgba(0,0,0,.3); }
+pre.diff.del { background: rgba(255,107,91,.12); color: #FFB3A8; }
+pre.diff.add { background: rgba(46,230,166,.10); color: #A8F3D6; }
+pre.out { color: #D3CFC5; }
+.tag.err { background: rgba(255,107,91,.2); color: var(--coral); }
+.tag.ok { background: rgba(46,230,166,.18); color: var(--mint); }
+.spin.small { width: 12px; height: 12px; border-width: 2px; }
+.reads { display: flex; flex-wrap: wrap; gap: 4px; }
+.reads .tag { font-size: 11.5px; opacity: .8; }
+.plan { background: rgba(0,0,0,.18); border-radius: 12px; padding: 8px 12px; }
+.todo { display: flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 700; padding: 3px 0; }
+.todo i { width: 14px; height: 14px; border-radius: 4px; border: 2px solid var(--muted); flex: none; }
+.todo.completed { color: var(--muted); text-decoration: line-through; }
+.todo.completed i { background: var(--mint); border-color: var(--mint); }
+.todo.in_progress i { border-color: var(--gold); background: rgba(255,197,61,.35); }
+.checkpoint { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px; border-radius: 20px; border: 2px dashed var(--sky); background: rgba(232,168,124,.06); }
+.checkpoint.k-stakeholder { border-color: var(--gold); background: rgba(255,197,61,.06); }
+.checkpoint > div { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.checkpoint > .btn { flex: none; }
+.checkpoint b { display: block; font: 19px/1.2 var(--display); margin: 6px 0 2px; }
+.kindtag { display: inline-block; width: auto; }
+.cbody .checkpoint { margin-bottom: 10px; padding: 12px 14px; }
+.cbody .checkpoint b { font-size: 17px; }
+.cp-top { display: flex; justify-content: space-between; align-items: center; }
+.cp-title { font: 21px/1.15 var(--display); margin: 8px 0 12px; }
+.cp-q { font-size: 17px; font-weight: 800; line-height: 1.45; margin-bottom: 12px; }
+.cp-q p { margin: 0 0 8px; }
+.cp-q pre { background: rgba(0,0,0,.35); border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; overflow-x: auto; font-size: 13px; }
+.cp-q pre code { background: none; padding: 0; }
+.cp textarea { min-height: 120px; font-size: 15px; }
+.cp .ctx { margin: 10px 0; }
+.cp-sheet { margin-top: 14px; border-radius: 16px; padding: 14px; font-weight: 600; }
+.cp-sheet.pass { background: #10372E; } .cp-sheet.retry { background: #3A2E0E; } .cp-sheet.fail { background: #3D1620; }
+.cp-sheet p { margin: 0 0 8px; }
+.cp-verdict { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.cp-verdict b { font: 22px/1.1 var(--display); }
+.cp-sheet.pass .cp-verdict b { color: var(--mint); } .cp-sheet.retry .cp-verdict b { color: var(--gold); } .cp-sheet.fail .cp-verdict b { color: var(--coral); }
+.xpgain.small { font-size: 20px; }
+.cp-help { margin-top: 14px; padding-top: 12px; border-top: 2px solid var(--line); }
+.cp-help textarea { min-height: 48px; }
+.cp-foot { display: flex; justify-content: space-between; gap: 10px; padding: 12px 16px; border-top: 2px solid var(--line); }
+@media (max-width: 1100px) { .coach { position: static; height: 680px; } .xrow { grid-template-columns: 1fr; gap: 2px; } }
+
+/* notes */
+.savenote { display: block; margin-top: 8px; background: none; border: 0; padding: 0; color: var(--muted); font: 800 11.5px/1 var(--ui); text-transform: uppercase; letter-spacing: .04em; cursor: pointer; opacity: 0; transition: opacity .15s; }
+.msg.tutor:hover .savenote, .savenote:focus-visible, .savenote:disabled { opacity: 1; }
+.savenote:hover { color: var(--sky); }
+.linkrow { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border-radius: 16px; background: var(--raised); margin-top: 12px; }
+.linkrow > div { flex: 1; } .linkrow b { display: block; font: 19px/1.2 var(--display); margin-bottom: 4px; }
+.linkrow.on { border: 2px solid var(--mint); } .linkrow.on b { color: var(--mint); }
+.notesmd { font-weight: 600; } .notesmd .mdh { font-family: var(--display); font-weight: 400; margin: 18px 0 8px; }
+.notesmd h3.mdh { font-size: 26px; margin-top: 0; } .notesmd h4.mdh { font-size: 21px; color: var(--sky); } .notesmd h5.mdh { font-size: 17px; color: var(--gold); }
+.notesmd ul { padding-left: 20px; } .notesmd li { margin-bottom: 6px; }
+
+/* settings */
+.setgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; align-items: start; }
+.stepper { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-top: 2px solid var(--line); }
+.stepper > div { flex: 1; } .stepper b { display: block; } .stepper span { font-size: 12.5px; color: var(--muted); }
+.stepper output { min-width: 52px; text-align: center; font: 30px/1 var(--display); color: var(--gold); }
+.stepper .btn { width: 42px; height: 42px; padding: 0; font-size: 22px; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.presets .rankpill { cursor: pointer; color: var(--ink); }
+.setsum { background: var(--raised); border-radius: 14px; padding: 12px 14px; margin-top: 8px; font-weight: 700; }
+.setsum b { color: var(--gold); }
+.card.freeon { border-color: var(--mint); box-shadow: 0 0 30px rgba(46,230,166,.15); }
+.bigtoggle { display: flex; align-items: center; gap: 14px; cursor: pointer; padding: 6px 0; }
+.bigtoggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.setgrid > .card, .setgrid > .card + .card { margin-top: 0; }
+.card .bigtoggle { display: flex; margin: 0; font-size: inherit; color: inherit; font-weight: inherit; }
+.bigtoggle .track { display: block; width: 64px; height: 36px; border-radius: 20px; background: var(--raised); border: 2px solid var(--line); position: relative; flex: none; transition: background .2s; }
+.bigtoggle .knob { display: block; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: var(--muted); transition: transform .2s, background .2s; }
+.bigtoggle input:checked + .track { background: rgba(46,230,166,.3); border-color: var(--mint); }
+.bigtoggle input:checked + .track .knob { transform: translateX(28px); background: var(--mint); }
+.bigtoggle input:focus-visible + .track { outline: 3px solid var(--gold); outline-offset: 3px; }
+.bigtoggle > span:last-child { display: block; }
+.bigtoggle b { display: block; font: 20px/1.2 var(--display); }
+.bigtoggle small { color: var(--muted); font-size: 13px; }
+.chip.play.free b { color: var(--gold); }
+
+/* trophies */
+.trophyhead { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; flex-wrap: wrap; }
+.trophyhead h1, .loghead h1 { font: 40px/1 var(--display); margin: 0; }
+.namebox { display: flex; gap: 8px; align-items: center; }
+.namebox input { width: 240px; }
+h3.sec { font: 24px/1 var(--display); margin: 34px 0 14px; }
+.certs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.certcard { text-align: left; border: 0; cursor: pointer; border-radius: 20px; padding: 18px; background: linear-gradient(135deg, #3A2A0A, #5B4210); box-shadow: 0 5px 0 #241905; color: var(--ink); display: flex; gap: 14px; align-items: center; }
+.certcard svg { width: 54px; height: 54px; flex: none; }
+.certcard b { display: block; font: 19px/1.15 var(--display); color: var(--gold); }
+.certcard span { font-size: 13px; color: #E9D7A8; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+.badge { background: var(--deck); border: 2px solid var(--line); border-radius: 22px; padding: 18px 14px; text-align: center; }
+.badge svg { width: 74px; height: 74px; margin-bottom: 8px; }
+.badge b { display: block; font: 18px/1.15 var(--display); }
+.badge span { font-size: 12.5px; color: var(--muted); }
+.badge.locked svg { filter: grayscale(1) brightness(.55); opacity: .7; }
+.badge.locked b { color: var(--muted); }
+.ranks { display: flex; gap: 10px; flex-wrap: wrap; }
+.rankpill { padding: 10px 14px; border-radius: 14px; background: var(--deck); border: 2px solid var(--line); font-weight: 900; }
+.rankpill.reached { border-color: var(--gold); color: var(--gold); }
+.rankpill small { display: block; font-size: 11px; color: var(--muted); }
+
+/* certificate */
+.certificate { width: min(860px, 100%); min-height: 540px; display: flex; background: radial-gradient(circle at 50% 0%, #3A2C24, #1A1918 70%); border-radius: 18px; padding: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.5); animation: pop .5s cubic-bezier(.2,1.3,.4,1); }
+.certificate .frame { flex: 1; border: 3px solid var(--gold); border-radius: 10px; outline: 1px solid rgba(255,197,61,.5); outline-offset: -10px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 34px 50px 26px; }
+.certificate .seal { width: 92px; height: 92px; margin-bottom: 8px; }
+.certificate .t1 { font: 800 14px/1 'Cinzel', Georgia, serif; letter-spacing: .3em; color: var(--gold); }
+.certificate .t2 { font: 800 clamp(26px, 4.6vw, 46px)/1.1 'Cinzel', Georgia, serif; margin: 12px 0 18px; color: #fff; }
+.certificate .who { font: 700 15px/1.4 var(--ui); color: var(--muted); }
+.certificate .name { font: clamp(28px, 5vw, 50px)/1.1 var(--display); color: var(--gold); margin: 6px 0 14px; }
+.certificate .what { font: 700 15.5px/1.55 var(--ui); max-width: 52ch; }
+.certificate .what b { color: #fff; }
+.certificate .foot { width: 100%; margin-top: 30px; padding-top: 14px; border-top: 1px solid rgba(255,197,61,.35); display: flex; justify-content: space-between; font: 700 12px/1.4 var(--ui); color: var(--muted); text-align: left; }
+.certificate .foot div:last-child { text-align: right; }
+.certactions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+
+/* log */
+.loglayout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 32px; align-items: start; }
+.loghead p { color: var(--muted); max-width: 62ch; margin: 10px 0 20px; }
+.card { background: var(--deck); border: 2px solid var(--line); border-radius: 24px; padding: 20px; }
+.card + .card { margin-top: 16px; }
+.card h2 { font: 22px/1.1 var(--display); margin: 0 0 12px; }
+.card label { display: block; font-size: 13px; font-weight: 900; margin: 12px 0 5px; color: var(--muted); }
+.snippet { font-family: Consolas, monospace; font-size: 12px; background: rgba(0,0,0,.3); padding: 12px; border-radius: 12px; white-space: pre-wrap; word-break: break-all; font-weight: 400; }
+.entries .entry { background: var(--deck); border: 2px solid var(--line); border-radius: 18px; padding: 14px 16px; margin-bottom: 10px; }
+.entry .concept { font: 17px/1.2 var(--display); margin-bottom: 6px; }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 60; background: var(--raised); border: 2px solid var(--line); padding: 12px 18px; border-radius: 16px; font-weight: 800; box-shadow: 0 5px 0 #121110; display: flex; align-items: center; gap: 10px; animation: pop .3s; }
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+
+@media (max-width: 1020px) {
+  .layout, .loglayout { grid-template-columns: 1fr; }
+  .side { position: static; max-height: none; }
+  .addform { grid-template-columns: 1fr; }
+  .bar { flex-wrap: wrap; padding: 10px 14px; gap: 10px; }
+  .cli { display: none; }
+  main { padding: 18px 14px; }
+  .hero { grid-template-columns: 1fr; }
+  .qtext { font-size: 21px; }
+  .review { flex-direction: column; align-items: stretch; }
+  .unit-head { flex-direction: column; align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@media print {
+  body { background: #fff; }
+  body > *:not(.modal) { display: none !important; }
+  .modal { position: static; background: none; backdrop-filter: none; padding: 0; }
+  .certactions { display: none; }
+  .certificate { box-shadow: none; width: 100%; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="logo" aria-label="Claudemy">Claudemy</div>
+  <nav class="tabs" aria-label="Views">
+    <button data-view="projects" aria-current="page">Projects</button>
+    <button data-view="path">Path</button>
+    <button data-view="trophies">Trophies</button>
+    <button data-view="log">Work log</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+  <div class="stats">
+    <div class="chip streak" id="chip-streak" title="Day streak"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2c1 3.5 5 5.6 5 10.5A5 5 0 0 1 12 18a5 5 0 0 1-5-5.2c0-2.3 1.2-3.8 2.4-5 .2 1.6 1 2.7 2.1 3.2C11 8.6 11 5.4 12 2Z"/><path fill="#FFC53D" d="M12 11c.6 1.6 2.4 2.5 2.4 4.4A2.4 2.4 0 0 1 12 18a2.4 2.4 0 0 1-2.4-2.5c0-1.4 1.2-2.2 1.6-3.2.3.6.6.9.8 1.1-.2-.9-.3-1.6 0-2.4Z"/></svg><b id="streak">0</b></div>
+    <div class="chip xp" title="Total XP"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 1.5 4 13.5h6.5L9 22.5l10.5-13H13Z"/></svg><b id="xp">0</b></div>
+    <a class="chip play" id="chip-play" href="/game.html" target="_blank" rel="noopener" title="Play time in Deepvale"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#8B5E34" d="M10.6 11.9 3 19.5 4.5 21l7.6-7.6Z"/><path fill="#C9D4DD" d="M7 4.5c4-2.4 9.3-2.1 12.5.9-1.5-.3-3.3 0-4.8.8l2.6 2.6c.8-1.5 1.1-3.3.8-4.8 3 3.2 3.3 8.5.9 12.5.2-2.4-.4-4.6-1.7-6.3L11.8 14l-1.8-1.8 3.8-3.8C12.1 7.1 9.9 6.4 7 4.5Z"/></svg><b id="playtime">0:00</b><small id="playprog"></small></a>
+    <button class="iconbtn" id="sound" title="Sound on or off" aria-pressed="true"></button>
+    <div class="cli" id="cli" title="Connection to your Claude Code CLI"><span class="dot"></span><span id="cli-text">Checking CLI</span></div>
+  </div>
+</header>
+
+<main>
+  <section id="view-projects">
+    <div id="projects-list"></div>
+    <div id="project-detail" hidden></div>
+  </section>
+
+  <section id="view-path" class="layout" hidden>
+    <div>
+      <div class="hero" id="hero"></div>
+      <div class="review" id="review"></div>
+      <div id="units"></div>
+      <form class="addform" id="add-concept">
+        <input type="text" name="name" placeholder="New concept to master, like OAuth token flow" aria-label="Concept name" required>
+        <input type="text" name="topic" placeholder="Unit, like Identity" aria-label="Unit">
+        <button class="btn" type="submit">Add to path</button>
+      </form>
+    </div>
+    <aside class="side" id="side" aria-live="polite"></aside>
+  </section>
+
+  <section id="view-trophies" hidden></section>
+
+  <section id="view-settings" hidden></section>
+
+  <section id="view-log" class="loglayout" hidden>
+    <div class="loghead">
+      <h1>Work log</h1>
+      <p>Decisions, debug steps and insights from real projects. Every lesson and every tutor chat is built from what's written here, so you train on your own work.</p>
+      <div class="entries" id="entries"></div>
+    </div>
+    <div>
+      <form class="card" id="add-entry">
+        <h2>Log something</h2>
+        <label for="e-concept">Concept</label>
+        <input type="text" id="e-concept" name="concept" list="concept-names" required placeholder="Existing or new concept">
+        <datalist id="concept-names"></datalist>
+        <label for="e-topic">Unit (for new concepts)</label>
+        <input type="text" id="e-topic" name="topic" placeholder="Networking">
+        <label for="e-project">Project</label>
+        <input type="text" id="e-project" name="project" placeholder="My project">
+        <label for="e-kind">Kind</label>
+        <select id="e-kind" name="kind"><option value="decision">Decision</option><option value="debug">Debug step</option><option value="insight" selected>Insight</option><option value="concept">Concept</option></select>
+        <label for="e-text">What happened, and why</label>
+        <textarea id="e-text" name="text" required rows="5" placeholder="We chose X over Y because…"></textarea>
+        <div style="margin-top:14px"><button class="btn wide" type="submit">Save entry</button></div>
+      </form>
+      <div class="card">
+        <h2>Auto-log from Claude Code</h2>
+        <p class="hint" style="margin-top:0">Your builder session can post entries with this call. The README has a CLAUDE.md snippet that tells Claude Code when.</p>
+        <div class="snippet" id="snippet"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="lesson" id="lesson" hidden></div>
+<div class="modal" id="modal" hidden></div>
+<canvas id="confetti"></canvas>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const LV_COLORS = ['#4A4842', '#E8A87C', '#2EE6A6', '#D97757', '#FFC53D'];
+const UNIT_GRADS = [['#D97757', '#B4583A'], ['#E8A87C', '#9C5F3E'], ['#2EE6A6', '#119B71'], ['#E5534B', '#C33A55'], ['#FFC53D', '#E07F00'], ['#D98BB5', '#8E5A74']];
+let state = null;
+let selectedId = null;
+let sideTab = 'tutor';
+let L = null; // active lesson
+const chatBusy = {};
+let soundOn = true;
+try { soundOn = localStorage.getItem('claudemy-sound') !== 'off'; } catch {}
+
+// ---------- icons ----------
+const ICON = {
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9Z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="#fff" stroke-width="3.2" stroke-linecap="round" d="M12 5v14M5 12h14" opacity=".85"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M6 3h12v3h3v2a5 5 0 0 1-4.6 5A6 6 0 0 1 13 15.9V18h3v3H8v-3h3v-2.1A6 6 0 0 1 7.6 13 5 5 0 0 1 3 8V6h3Zm0 5H5a3 3 0 0 0 1.4 2.5A7 7 0 0 1 6 8Zm12 0a7 7 0 0 1-.4 2.5A3 3 0 0 0 19 8Z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="#003222" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  bang: '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="#2A1B00" stroke-width="3.5" stroke-linecap="round" d="M12 5v9M12 19v.1"/></svg>',
+  cross: '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="#fff" stroke-width="3.5" stroke-linecap="round" d="m6.5 6.5 11 11m0-11-11 11"/></svg>',
+  close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="currentColor" stroke-width="2.8" stroke-linecap="round" d="m6 6 12 12M18 6 6 18"/></svg>',
+  soundOn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4Z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  soundOff: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4Z"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="m16 9.5 5 5m0-5-5 5"/></svg>',
+  brain: (s = 1) => `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="bg${s}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8987A"/><stop offset="1" stop-color="#A9573D"/></linearGradient></defs><path d="M60 6 106 32v56L60 114 14 88V32Z" fill="url(#bg${s})"/><path d="M60 6 106 32v56L60 114 14 88V32Z" fill="none" stroke="#F2C4AE" stroke-width="3" opacity=".5"/><path d="M66 24 38 66h20l-7 32 31-45H61Z" fill="#FFC53D" stroke="#C98A00" stroke-width="3" stroke-linejoin="round"/></svg>`,
+};
+function emblem(rankIndex, size = 84) {
+  const fills = [['#8A867C', '#5A564E'], ['#E8A87C', '#B97A52'], ['#2EE6A6', '#12A577'], ['#E8987A', '#A9573D'], ['#FF8A7A', '#B33A33'], ['#FFD666', '#E08A00']];
+  const [a, b] = fills[Math.min(rankIndex, 5)];
+  const stars = Math.min(rankIndex, 5);
+  const starRow = Array.from({ length: stars }, (_, i) => { const x = 50 + (i - (stars - 1) / 2) * 13; return `<path transform="translate(${x - 6} 73) scale(.5)" fill="#fff" d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9Z"/>`; }).join('');
+  return `<svg class="emblem" viewBox="0 0 100 110" width="${size}" aria-hidden="true"><defs><linearGradient id="em${rankIndex}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>
+    <path d="M50 4 92 18v38c0 26-19 42-42 50C27 98 8 82 8 56V18Z" fill="url(#em${rankIndex})" stroke="#fff" stroke-opacity=".55" stroke-width="3"/>
+    <path d="M54 22 36 50h12l-5 20 21-30H51Z" fill="#fff"/>${starRow}</svg>`;
+}
+const BADGE_ART = {
+  first: ['#E5534B', '<rect x="21" y="15" width="4.5" height="34" rx="2.2" fill="#fff"/><path d="M25 17h19l-5 7.5 5 7.5H25Z" fill="#fff"/>'],
+  flawless: ['#2EE6A6', '<path fill="#fff" d="m32 16 4.6 9.6 10.4 1.4-7.6 7.3 1.9 10.4L32 39.8l-9.3 4.9 1.9-10.4-7.6-7.3 10.4-1.4Z"/>'],
+  comeback: ['#E8A87C', '<path fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" d="M22 34a10 10 0 1 0 4-11"/><path fill="#fff" d="m19 17 9 4-7 7Z"/>'],
+  streak3: ['#FF8A3D', '<path fill="#fff" d="M32 14c2 7 10 11 10 21a10 10 0 0 1-20 0c0-5 3-8 5-10 .4 3 2 5 4 6-1-5-1-11 1-17Z"/>'],
+  streak7: ['#FF5A5F', '<path fill="#fff" d="M32 12c2 7 11 12 11 23a11 11 0 0 1-22 0c0-5 3-9 5-11 .4 3 2 5 4 6-1-5-1-12 2-18Z"/><path fill="#FFC53D" d="M32 30c1 3 5 5 5 9a5 5 0 0 1-10 0c0-3 2-4 3-6l1 2Z"/>'],
+  streak30: ['#C3264B', '<path fill="#FFC53D" d="M33 12 21 34h9l-3 16 15-23h-9Z"/>'],
+  curious: ['#E8987A', '<path fill="#fff" d="M18 20h28a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H30l-8 7v-7h-4a4 4 0 0 1-4-4V24a4 4 0 0 1 4-4Z"/>'],
+  grinder: ['#C76A4C', '<rect x="14" y="24" width="6" height="16" rx="2" fill="#fff"/><rect x="20" y="20" width="5" height="24" rx="2" fill="#fff"/><rect x="39" y="20" width="5" height="24" rx="2" fill="#fff"/><rect x="44" y="24" width="6" height="16" rx="2" fill="#fff"/><rect x="25" y="29.5" width="14" height="5" rx="2" fill="#fff"/>'],
+  quizmaster: ['#E8A87C', '<path fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" d="M25 25a7 7 0 1 1 10 6.3c-2 1-3 2.3-3 4.7"/><circle cx="32" cy="44" r="3.2" fill="#fff"/>'],
+  boardroom: ['#FFC53D', '<rect x="17" y="24" width="30" height="20" rx="3" fill="#fff"/><path fill="none" stroke="#fff" stroke-width="4" d="M26 24v-4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"/><rect x="17" y="31" width="30" height="3" fill="#C98A00"/>'],
+  certified: ['#FFC53D', '<circle cx="32" cy="28" r="11" fill="#fff"/><path fill="#fff" d="m25 36-4 13 6-3 3 5 2-12Zm14 0 4 13-6-3-3 5-2-12Z"/>'],
+  polymath: ['#D98BB5', '<circle cx="24" cy="26" r="6" fill="#fff"/><circle cx="40" cy="26" r="6" fill="#fff"/><circle cx="32" cy="40" r="6" fill="#fff"/>'],
+};
+function badgeSvg(id) {
+  const [c, art] = BADGE_ART[id] || ['#D97757', ''];
+  return `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 3 57 17v30L32 61 7 47V17Z" fill="${c}"/><path d="M32 3 57 17v30L32 61 7 47V17Z" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="3"/><path d="M32 8 52 19.5" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>${art}</svg>`;
+}
+function nodeIcon(box) { return box === 0 ? ICON.plus : box === 4 ? ICON.trophy : ICON.star; }
+
+// ---------- helpers ----------
+async function api(path, body) {
+  const res = await fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+  return data;
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function md(text) {
+  const blocks = [];
+  let t = esc(text).replace(/```[\w-]*\n?([\s\S]*?)```/g, (_, code) => { blocks.push(`<pre><code>${code.trim()}</code></pre>`); return `\u0000${blocks.length - 1}\u0000`; });
+  t = t.replace(/`([^`\n]+)`/g, '<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  return t.split(/\n{2,}/).map((para) => {
+    const lines = para.split('\n');
+    if (lines.every((l) => /^\s*[-*] /.test(l))) return `<ul>${lines.map((l) => `<li>${l.replace(/^\s*[-*] /, '')}</li>`).join('')}</ul>`;
+    if (lines.every((l) => /^\s*\d+[.)] /.test(l))) return `<ol>${lines.map((l) => `<li>${l.replace(/^\s*\d+[.)] /, '')}</li>`).join('')}</ol>`;
+    if (/^\u0000\d+\u0000$/.test(para.trim())) return para.trim();
+    const hm = lines.length === 1 && lines[0].match(/^(#{1,4}) (.*)$/);
+    if (hm) return `<h${hm[1].length + 2} class="mdh">${hm[2]}</h${hm[1].length + 2}>`;
+    return `<p>${lines.join('<br>')}</p>`;
+  }).join('').replace(/\u0000(\d+)\u0000/g, (_, i) => blocks[i]);
+}
+function toast(html, ms = 2800) {
+  const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = html; document.body.append(el);
+  setTimeout(() => el.remove(), ms);
+}
+function when(iso) {
+  const d = new Date(iso); if (d <= new Date()) return 'now';
+  const days = Math.round((d - new Date()) / 86400000); return days <= 1 ? 'tomorrow' : `in ${days} days`;
+}
+function countUp(el, to) {
+  const from = Number(el.textContent) || 0; if (from === to) { el.textContent = to; return; }
+  const start = performance.now(), dur = 700;
+  const step = (now) => { const k = Math.min(1, (now - start) / dur); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+// ---------- sound ----------
+let actx;
+function tone(freqs, dur = 0.12, type = 'triangle', gap = 0.09) {
+  if (!soundOn) return;
+  try {
+    actx ||= new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + i * gap;
+      o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + 0.02);
+    });
+  } catch {}
+}
+const sfx = { pass: () => tone([660, 880, 1320]), retry: () => tone([520, 440], 0.14), fail: () => tone([300, 220], 0.2, 'sawtooth', 0.12), levelup: () => tone([523, 659, 784, 1047, 1319], 0.16, 'triangle', 0.08), click: () => tone([880], 0.05) };
+function renderSoundBtn() { const b = $('#sound'); b.innerHTML = soundOn ? ICON.soundOn : ICON.soundOff; b.setAttribute('aria-pressed', soundOn); }
+
+// ---------- confetti ----------
+function confetti(power = 1) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv = $('#confetti'), ctx = cv.getContext('2d');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const colors = ['#FFC53D', '#2EE6A6', '#E8A87C', '#D97757', '#E5534B', '#ffffff'];
+  const parts = Array.from({ length: Math.round(160 * power) }, () => ({
+    x: innerWidth / 2 + (Math.random() - 0.5) * 200, y: innerHeight * 0.55, vx: (Math.random() - 0.5) * 18, vy: -Math.random() * 20 - 8,
+    s: Math.random() * 8 + 5, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: colors[Math.floor(Math.random() * colors.length)], life: 0,
+  }));
+  let frame = 0;
+  (function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    parts.forEach((p) => { p.vy += 0.55; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+    if (++frame < 150) requestAnimationFrame(draw); else ctx.clearRect(0, 0, cv.width, cv.height);
+  })();
+}
+
+// ---------- top bar + hero ----------
+function renderStats() {
+  const p = state.profile;
+  countUp($('#xp'), p.xp);
+  if (p.play) {
+    const s = Math.max(0, Math.floor(p.play.seconds)), pl = p.play;
+    $('#chip-play').classList.toggle('free', pl.freePlay);
+    $('#playtime').textContent = pl.freePlay ? 'Free play' : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    $('#playprog').textContent = `${pl.toward}/${pl.needed}`;
+    $('#chip-play').title = pl.freePlay ? 'Free play is on: Deepvale has no timer. Change it in Settings.' : `Play time in Deepvale. ${pl.toward} of ${pl.needed} correct answers to your next ${pl.minutes === 1 ? 'minute' : `${pl.minutes} minutes`}.`;
+  }
+  $('#streak').textContent = p.streak;
+  $('#chip-streak').classList.toggle('cold', !p.streak);
+  $('#chip-streak').title = p.streak ? `${p.streak}-day streak` : 'No streak yet. Finish a lesson today to start one.';
+}
+function renderHero() {
+  const p = state.profile, r = p.rank;
+  const pct = r.nextXp ? (p.xp - r.floor) / (r.nextXp - r.floor) : 1;
+  const goalPct = Math.min(1, p.xpToday / p.dailyGoal);
+  const C = 2 * Math.PI * 40;
+  $('#hero').innerHTML = `
+    <div class="rankrow">
+      ${emblem(r.index)}
+      <div style="flex:1;min-width:0">
+        <div class="rank-label">${p.name ? esc(p.name) + ', your rank' : 'Your rank'}</div>
+        <div class="rank-name">${esc(r.name)}</div>
+        <div class="xpbar"><i style="width:${Math.max(3, pct * 100)}%"></i></div>
+        <div class="xpnote">${r.next ? `${r.nextXp - p.xp} XP to ${esc(r.next)}` : 'Top rank reached. Legend status.'}</div>
+        ${p.play ? `<div class="xpnote">${p.play.toward}/${p.play.needed} correct answers to your next ${p.play.minutes === 1 ? 'minute' : `${p.play.minutes} minutes`} in Deepvale</div>` : ''}
+      </div>
+    </div>
+    <div class="goal" title="Daily goal">
+      <svg viewBox="0 0 96 96"><circle cx="48" cy="48" r="40" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="11"/>
+        <circle cx="48" cy="48" r="40" fill="none" stroke="${goalPct >= 1 ? '#2EE6A6' : '#FFC53D'}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - goalPct)}" style="transition:stroke-dashoffset .8s"/></svg>
+      <div class="num">${p.xpToday}</div>
+      <div class="lbl">${goalPct >= 1 ? 'Daily goal done' : `of ${p.dailyGoal} XP today`}</div>
+    </div>`;
+}
+
+// ---------- path ----------
+function renderPath() {
+  const due = state.concepts.filter((c) => c.isDue).sort((a, b) => a.box - b.box);
+  $('#review').innerHTML = due.length
+    ? `<p><strong>${due.length} ${due.length === 1 ? 'skill needs' : 'skills need'} a review</strong>Hit them before they fade. Up to 30 XP per question.</p><button class="btn gold big" id="go-review">Start review</button>`
+    : `<p><strong>All caught up</strong>Nothing to review. Log something from today's work or push a skill to the next level.</p>`;
+  const gr = $('#go-review'); if (gr) gr.onclick = () => openLesson(due[0].id);
+
+  const units = {};
+  state.concepts.forEach((c) => (units[c.topic] ||= []).push(c));
+  const offsets = [0, 70, 105, 70, 0, -70, -105, -70];
+  const firstDue = due[0]?.id;
+  $('#units').innerHTML = Object.keys(units).sort().map((topic, ui) => {
+    const list = units[topic].sort((a, b) => a.name.localeCompare(b.name));
+    const strong = list.filter((c) => c.box >= 3).length;
+    const [g1, g2] = UNIT_GRADS[ui % UNIT_GRADS.length];
+    return `<section class="unit">
+      <div class="unit-head" style="background:linear-gradient(90deg,${g1},${g2})"><div><span>Unit ${ui + 1}</span><h2>${esc(topic)}</h2></div><span>${strong}/${list.length} at Senior or higher</span></div>
+      <div class="path">${list.map((c, i) => `
+        <div class="node-wrap" style="transform:translateX(${offsets[i % offsets.length]}px)">
+          ${c.isDue ? `<span class="bubble ${c.id === firstDue ? 'bob' : ''}">Review</span>` : ''}
+          <button class="node" data-id="${c.id}" aria-pressed="${c.id === selectedId}" style="--c:${LV_COLORS[c.box]}" aria-label="${esc(c.name)}, ${c.level}">
+            <span class="node-ring" style="--p:${c.box / 4}"></span>${nodeIcon(c.box)}
+          </button>
+          <div class="node-name">${esc(c.name)}</div>
+          <div class="node-lvl">${c.level}</div>
+        </div>`).join('')}
+      </div></section>`;
+  }).join('') || '<p class="hint" style="margin-top:30px">Your path is empty. Add a concept below or log something from your work.</p>';
+  document.querySelectorAll('#units .node').forEach((n) => n.onclick = () => { sfx.click(); select(n.dataset.id); });
+  $('#concept-names').innerHTML = state.concepts.map((c) => `<option value="${esc(c.name)}">`).join('');
+}
+
+function select(id) {
+  selectedId = id;
+  document.querySelectorAll('#units .node').forEach((n) => n.setAttribute('aria-pressed', n.dataset.id === id));
+  renderSide();
+}
+const cur = () => state.concepts.find((c) => c.id === selectedId);
+
+function renderSide() {
+  const c = cur(), side = $('#side');
+  if (!c) {
+    side.innerHTML = `<div class="empty">${ICON.brain('side')}<strong>Pick a skill on your path</strong>Tap a circle to train it, or ask the tutor about it.</div>`;
+    return;
+  }
+  side.innerHTML = `
+    <div class="shead">
+      <div class="node" style="--c:${LV_COLORS[c.box]}"><span class="node-ring" style="--p:${c.box / 4}"></span>${nodeIcon(c.box)}</div>
+      <h2>${esc(c.name)}</h2>
+      <p class="facts">${esc(c.topic)}, ${c.lessons} ${c.lessons === 1 ? 'lesson' : 'lessons'}, review ${when(c.due)}</p>
+      <div class="ladder">${state.levels.map((n, i) => `<div class="${i <= c.box ? 'on' : ''}" style="${i <= c.box ? `background:${LV_COLORS[i]}` : ''}">${n}</div>`).join('')}</div>
+      <button class="btn big wide ${c.isDue ? 'gold' : ''}" id="side-start">${c.isDue ? 'Review now' : 'Start lesson'}</button>
+    </div>
+    <div class="stabs" role="tablist">
+      <button role="tab" data-tab="tutor" aria-selected="${sideTab === 'tutor'}">Ask the tutor</button>
+      <button role="tab" data-tab="sources" aria-selected="${sideTab === 'sources'}">From your work (${c.logCount})</button>
+    </div>
+    <div class="sbody" id="sbody"></div>
+    <div id="composer"></div>`;
+  $('#side-start').onclick = () => openLesson(c.id);
+  side.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { sideTab = b.dataset.tab; renderSide(); });
+  if (sideTab === 'tutor') renderChat(c); else renderSources(c);
+}
+
+function renderChat(c) {
+  const msgs = state.chats[c.id] || [];
+  $('#sbody').innerHTML = `<div class="chat">
+    ${msgs.length ? '' : `<p class="hint">Your tutor knows your work log and your level. It often asks what you think first, so a guess is a great answer. +2 XP per message.</p>`}
+    ${msgs.map((m) => m.role === 'user' ? `<div class="msg user"><p>${esc(m.text).replace(/\n/g, '<br>')}</p></div>` : `<div class="msg tutor"><span class="av">${ICON.brain('av')}</span><div>${md(m.text)}</div></div>`).join('')}
+    ${chatBusy[c.id] ? '<div class="wait"><span class="spin"></span>Your tutor is thinking</div>' : ''}
+  </div>`;
+  $('#composer').innerHTML = `<div class="composer">
+    <textarea id="chat-input" placeholder="Ask about ${esc(c.name)}" aria-label="Message the tutor" ${chatBusy[c.id] ? 'disabled' : ''}></textarea>
+    <div style="display:grid;gap:6px"><button class="btn" id="send" ${chatBusy[c.id] ? 'disabled' : ''}>Send</button>${msgs.length ? '<button class="btn ghost" id="reset" style="padding:8px">New</button>' : ''}</div>
+  </div>`;
+  const sb = $('#sbody'); sb.scrollTop = sb.scrollHeight;
+  const ta = $('#chat-input');
+  ta.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(c.id); } };
+  $('#send').onclick = () => sendChat(c.id);
+  const r = $('#reset'); if (r) r.onclick = async () => { await api('/api/chat/reset', { conceptId: c.id }); delete state.chats[c.id]; renderSide(); };
+}
+async function sendChat(id) {
+  const ta = $('#chat-input'); const message = ta.value.trim();
+  if (!message || chatBusy[id]) return;
+  (state.chats[id] ||= []).push({ role: 'user', text: message });
+  chatBusy[id] = true; renderSide();
+  try {
+    const r = await api('/api/chat', { conceptId: id, message });
+    state.chats[id] = r.messages; state.profile = r.profile;
+    renderStats(); renderHero();
+    handleChatRewards(r);
+    (r.newBadges || []).forEach((b) => queue.push({ kind: 'badge', badge: b })); runQueue();
+  } catch (e) { state.chats[id].pop(); toast(esc(e.message)); }
+  chatBusy[id] = false;
+  if (selectedId === id && sideTab === 'tutor') renderSide();
+}
+function renderSources(c) {
+  const entries = state.log.filter((e) => e.conceptId === c.id);
+  $('#composer').innerHTML = '';
+  $('#sbody').innerHTML = entries.length ? entries.map(entryHtml).join('') : '<p class="hint">Nothing logged for this skill yet. Lessons use general knowledge until you log something from your own work.</p>';
+}
+function entryHtml(e) { return `<div class="entry"><span class="kind">${esc(e.kind)}</span><span class="when">${esc(e.project || 'No project')}, ${new Date(e.ts).toLocaleDateString()}</span><p>${esc(e.text)}</p></div>`; }
+
+// ---------- lesson ----------
+function openLesson(id) {
+  L = { conceptId: id, phase: 'loading', answer: '' };
+  $('#lesson').hidden = false; document.body.style.overflow = 'hidden';
+  renderLesson(); fetchQuestion();
+}
+function closeLesson() { L = null; $('#lesson').hidden = true; document.body.style.overflow = ''; renderAll(); }
+async function fetchQuestion() {
+  L.phase = 'loading'; L.result = null; L.answer = ''; L.error = null; renderLesson();
+  try { L.question = await api('/api/lesson', { conceptId: L.conceptId }); L.phase = 'question'; }
+  catch (e) { L.phase = 'error'; L.error = e.message; }
+  renderLesson();
+}
+function renderLesson() {
+  if (!L) return;
+  const c = state.concepts.find((x) => x.id === L.conceptId) || { name: '' };
+  const prog = { loading: 8, question: L.result ? 55 : 20, grading: L.result ? 70 : 40, retry: 55, result: 100, error: 8, done: 100 }[L.phase];
+  const el = $('#lesson');
+  let body = '', foot = '';
+  if (L.phase === 'loading') {
+    body = `<div class="loadcard">${ICON.brain('load')}<h2>Building your challenge</h2><p class="hint">Claude is reading your work log for ${esc(c.name)}.</p></div>`;
+  } else if (L.phase === 'error') {
+    body = `<div class="loadcard">${ICON.brain('err')}<h2>That didn't work</h2><p class="error">${esc(L.error)}</p></div>`;
+    foot = `<div class="lfoot-in"><button class="btn ghost" id="l-back">Back to path</button><button class="btn" id="l-again">Try again</button></div>`;
+  } else if (['question', 'grading', 'retry', 'result'].includes(L.phase)) {
+    body = `<div class="lcol">
+      <div class="lconcept">${esc(c.name)}</div>
+      <div class="qchip">${esc(L.question.typeLabel)}${L.result && L.phase !== 'result' ? ', second try' : ''}</div>
+      <div class="qtext">${md(L.question.question)}</div>
+      <textarea id="l-answer" placeholder="Type your answer in your own words. Explain why, not just what." ${L.phase === 'question' ? '' : 'disabled'}>${esc(L.answer)}</textarea>
+      ${L.error ? `<p class="error">${esc(L.error)}</p>` : ''}
+    </div>`;
+    if (L.phase === 'question') foot = `<div class="lfoot-in"><button class="btn ghost" id="l-skip">Skip</button><button class="btn big mint" id="l-check" ${L.answer.trim().length < 3 ? 'disabled' : ''}>Check</button></div>`;
+    if (L.phase === 'grading') foot = `<div class="lfoot-in"><span class="wait"><span class="spin"></span>Claude is grading your answer</span><button class="btn big" disabled>Checking</button></div>`;
+    if (L.phase === 'retry' || L.phase === 'result') foot = sheetHtml();
+  } else if (L.phase === 'done') {
+    const r = L.result;
+    body = `<div class="loadcard">${emblem(state.profile.rank.index, 120)}<h2>Lesson complete</h2><p class="hint">+${r.rewards?.xp || 0} XP. ${esc(c.name)} is now <b style="color:#fff">${esc(c.level || '')}</b>.</p></div>`;
+    foot = `<div class="lfoot-in"><button class="btn ghost" id="l-back">Back to path</button><button class="btn big" id="l-next">Next challenge</button></div>`;
+  }
+  const sheetClass = L.phase === 'retry' ? 'retry' : L.phase === 'result' ? (L.result.score >= 0.8 ? 'pass' : 'fail') : '';
+  el.innerHTML = `
+    <div class="lhead"><button class="close" id="l-close" aria-label="Close lesson">${ICON.close}</button><div class="lprog"><i style="width:${prog}%"></i></div><div class="chip xp"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 1.5 4 13.5h6.5L9 22.5l10.5-13H13Z"/></svg>${state.profile.xp}</div></div>
+    <div class="lbody">${body}</div>
+    <div class="lfoot ${sheetClass ? 'sheet ' + sheetClass : ''}">${foot}</div>`;
+  $('#l-close').onclick = closeLesson;
+  const ta = $('#l-answer');
+  if (ta && L.phase === 'question') {
+    ta.oninput = () => { L.answer = ta.value; const b = $('#l-check'); if (b) b.disabled = ta.value.trim().length < 3; };
+    ta.onkeydown = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) check(); };
+    ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+  const on = (sel, fn) => { const b = $(sel); if (b) b.onclick = fn; };
+  on('#l-check', check); on('#l-skip', fetchQuestion); on('#l-back', closeLesson); on('#l-again', fetchQuestion); on('#l-next', fetchQuestion);
+  on('#l-retry', () => { L.phase = 'question'; renderLesson(); });
+  on('#l-continue', () => { L.phase = 'done'; renderLesson(); runQueue(); });
+  on('#l-discuss', () => {
+    const q = L.question.question, id = L.conceptId; closeLesson(); select(id);
+    sideTab = 'tutor'; renderSide();
+    const t = $('#chat-input'); if (t) { t.value = `I just answered: "${q}". Walk me through what I missed and why it matters.`; t.focus(); }
+  });
+}
+function sheetHtml() {
+  const r = L.result, pass = r.score >= 0.8, retry = L.phase === 'retry';
+  const title = retry ? 'So close. One more shot.' : pass ? (r.score >= 0.999 ? 'Flawless!' : 'Nailed it!') : 'Not this time';
+  const icon = retry ? ICON.bang : pass ? ICON.check : ICON.cross;
+  const xp = r.rewards ? `<div class="xpgain">+${r.rewards.xp} XP</div>` : '';
+  return `<div class="lfoot-in" style="padding-bottom:12px"><div class="verdict"><div class="ico">${icon}</div><div><h3>${title}</h3><div class="sub">${md(r.feedback)}</div></div></div>${xp}</div>
+    <div class="sheet-details">
+      ${r.hit.length ? `<ul class="points hit">${r.hit.map((h) => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
+      ${r.missed.length ? `<ul class="points missed">${r.missed.map((h) => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
+      ${r.modelAnswer ? `<div class="modelans"><b>Model answer</b>${md(r.modelAnswer)}</div>` : ''}
+    </div>
+    <div class="lfoot-in" style="padding-top:8px">
+      ${retry ? `<span class="hint">${Math.round(r.score * 100)}% of the key points. Use the hints above.</span><button class="btn big gold" id="l-retry">Try again</button>`
+              : `<button class="btn ghost" id="l-discuss">Discuss with tutor</button><button class="btn big ${pass ? 'mint' : 'coral'}" id="l-continue">Continue</button>`}
+    </div>`;
+}
+async function check() {
+  if (!L || L.answer.trim().length < 3) return;
+  L.phase = 'grading'; L.error = null; renderLesson();
+  try {
+    const r = await api('/api/answer', { questionId: L.question.questionId, answer: L.answer });
+    L.result = r;
+    if (!r.done) { L.phase = 'retry'; sfx.retry(); }
+    else {
+      L.phase = 'result';
+      if (r.state) state = r.state;
+      if (r.score >= 0.8) { sfx.pass(); confetti(r.score >= 0.999 ? 1.4 : 0.8); } else sfx.fail();
+      const w = r.rewards || {};
+      if (w.rankUp) queue.push({ kind: 'rank', rank: w.rankUp });
+      if (w.leveledUp) queue.push({ kind: 'level', concept: r.progress });
+      if (w.certificate) queue.push({ kind: 'cert', cert: w.certificate });
+      if (w.playEarned) queue.push({ kind: 'play', minutes: w.playEarned });
+      (w.newBadges || []).forEach((b) => queue.push({ kind: 'badge', badge: b }));
+      renderStats();
+    }
+  } catch (e) { L.phase = 'question'; L.error = e.message; }
+  renderLesson();
+}
+
+// ---------- chat quiz rewards ----------
+function handleChatRewards(r) {
+  const w = r.rewards;
+  if (!w) return;
+  const pl = state.profile.play || { toward: 0, needed: 10 };
+  if (w.correct) { sfx.pass(); toast(`Correct, ${pl.toward}/${pl.needed} toward your next play time. +${w.xp} XP`); }
+  else { sfx.retry(); toast(`Scored ${Math.round(w.score * 100)}%. 80% or more counts toward play time. +${w.xp} XP`); }
+  if (w.rankUp) queue.push({ kind: 'rank', rank: w.rankUp });
+  if (w.playEarned) queue.push({ kind: 'play', minutes: w.playEarned });
+}
+
+// ---------- celebrations ----------
+const queue = [];
+let showing = false;
+function runQueue() {
+  if (showing || !queue.length) return;
+  showing = true;
+  const item = queue.shift(), m = $('#modal');
+  let html = '';
+  if (item.kind === 'level') {
+    const lv = state.levels.indexOf(item.concept.levelAfter);
+    html = `<div class="kicker">Level up</div><div class="node" style="--c:${LV_COLORS[lv]};margin:0 auto;width:120px;height:120px"><span class="node-ring" style="--p:${lv / 4};inset:-10px"></span>${nodeIcon(lv)}</div>
+      <h2 class="shine">${esc(item.concept.levelAfter)}</h2><p>You moved from ${esc(item.concept.levelBefore)} to ${esc(item.concept.levelAfter)}. +20 bonus XP.</p>`;
+  } else if (item.kind === 'rank') {
+    const idx = state.profile.ranks.findIndex((r) => r.name === item.rank);
+    html = `<div class="kicker">New rank unlocked</div><div class="art">${emblem(idx, 140)}</div><h2 class="shine">${esc(item.rank)}</h2><p>Your total XP pushed you up the ladder.</p>`;
+  } else if (item.kind === 'badge') {
+    html = `<div class="kicker">Badge earned</div><div class="art">${badgeSvg(item.badge.id)}</div><h2>${esc(item.badge.name)}</h2><p>${esc(item.badge.desc)}</p>`;
+  } else if (item.kind === 'play') {
+    html = `<div class="kicker">Play time earned</div><div class="art"><svg viewBox="0 0 64 64"><path d="M32 3 57 17v30L32 61 7 47V17Z" fill="#2EE6A6"/><path fill="#8B5E34" d="M29 33 14 48l3 3 15-15Z"/><path fill="#fff" d="M19 15c8-5 19-4 25 2-3-.6-6.6 0-9.6 1.6l5.2 5.2c1.6-3 2.2-6.6 1.6-9.6 6 6.4 6.6 17 1.8 25 .4-4.8-.8-9.2-3.4-12.6L31.6 34 28 30.4l7.6-7.6C32.2 20.2 27.8 18.8 19 15Z"/></svg></div>
+      <h2 class="shine">+${item.minutes || 1} ${(item.minutes || 1) === 1 ? 'minute' : 'minutes'}</h2><p>Deepvale is waiting for you.</p>`;
+  } else if (item.kind === 'cert') {
+    html = `<div class="kicker">Mastery reached</div><div class="art">${badgeSvg('certified')}</div><h2 class="shine">Certified</h2><p>You reached Expert on ${esc(item.cert.conceptName)}. +100 XP and a certificate with your name on it.</p>`;
+  }
+  m.innerHTML = `<div class="mcard" role="dialog" aria-modal="true">${html}<div class="row">
+    ${item.kind === 'cert' ? '<button class="btn gold big wide" id="m-view">View certificate</button>' : ''}
+    ${item.kind === 'play' ? '<a class="btn mint big wide" id="m-play" href="/game.html" target="_blank" rel="noopener">Play now</a>' : ''}
+    <button class="btn big wide ${item.kind === 'cert' ? 'ghost' : ''}" id="m-ok">Continue</button></div></div>`;
+  m.hidden = false; sfx.levelup(); confetti(item.kind === 'badge' ? 0.6 : 1.2);
+  const done = () => { m.hidden = true; showing = false; runQueue(); };
+  $('#m-ok').onclick = done; $('#m-ok').focus();
+  const mp = $('#m-play'); if (mp) mp.addEventListener('click', done);
+  const v = $('#m-view'); if (v) v.onclick = () => { showing = false; showCertificate(item.cert); };
+}
+function showCertificate(cert) {
+  const m = $('#modal'), name = state.profile.name || 'Your name here';
+  m.innerHTML = `<div>
+    <div class="certificate"><div class="frame">
+      <div class="seal">${badgeSvg('certified')}</div>
+      <div class="t1">Claudemy</div>
+      <div class="t2">Certificate of Mastery</div>
+      <div class="who">This certifies that</div>
+      <div class="name">${esc(name)}</div>
+      <div class="what">reached <b>Expert</b> level in <b>${esc(cert.conceptName)}</b> (${esc(cert.topic)}), by passing questions at every level from explaining it back to debugging it without AI and teaching it to a customer.</div>
+      <div class="foot"><div>Awarded<br>${new Date(cert.date).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</div><div>Examined by<br>Your Claude tutor</div></div>
+    </div></div>
+    <div class="certactions"><button class="btn gold" id="c-print">Print or save as PDF</button><button class="btn ghost" id="c-close">Close</button></div>
+  </div>`;
+  m.hidden = false;
+  $('#c-print').onclick = () => print();
+  $('#c-close').onclick = () => { m.hidden = true; showing = false; runQueue(); };
+}
+
+
+// ---------- projects: second-screen companion ----------
+let projects = null, project = null, packs = null, knownPackIds = null;
+const projBusy = { analyze: false, chat: false, explain: {} };
+let ptab = 'live', ctab = 'coach';
+let live = null, liveTimer = null, explaining = null;
+const openSteps = new Set();
+const pageOpenedAt = Date.now();
+let autoExplain = true;
+try { autoExplain = localStorage.getItem('claudemy-autoexplain') !== 'off'; } catch {}
+let PK = null; // checkpoint being played
+
+const FOLDER = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="#D97757" d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4l2 2.2h7A2.5 2.5 0 0 1 21 8.7v8.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5Z"/></svg>';
+const FILE = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="#E8A87C" d="M6 2.5h8l5 5v13a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 20.5v-16A2 2 0 0 1 6 2.5Z" opacity=".9"/><path fill="#2A2927" d="M14 2.5V7a.5.5 0 0 0 .5.5H19" opacity=".5"/></svg>';
+const CHEV = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m9 5 7 7-7 7"/></svg>';
+function ago(iso) {
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return 'just now'; if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60); if (h < 24) return `${h} h ago`;
+  const d = Math.round(h / 24); return d === 1 ? 'yesterday' : `${d} days ago`;
+}
+const clock = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+const projectPacks = (pid) => (packs?.packs || []).filter((p) => p.projectId === pid);
+
+// ----- project list -----
+async function loadProjects() {
+  try { projects = await api('/api/projects'); } catch (e) { projects = { projects: [], error: e.message }; }
+  if (view === 'projects' && !project) renderProjects();
+}
+function renderProjects() {
+  const list = projects?.projects || [];
+  $('#projects-list').innerHTML = `
+    <div class="phead-row"><div><h1>Your projects</h1>
+      <p>Open the project you're vibe coding and keep it on your second screen. Claudemy follows the Claude Code session live and explains each step. <b style="color:var(--mint)">Green</b> means a session ran in the last ${projects?.activeMinutes || 15} minutes.</p></div>
+      <button class="btn ghost" id="p-refresh">Refresh</button></div>
+    ${!projects ? '<div class="wait"><span class="spin"></span>Reading your Claude Code projects</div>'
+      : !list.length ? `<div class="pempty"><strong>No Claude Code projects found</strong>Claudemy looks in <code>${esc(projects.projectsDir || '~/.claude/projects')}</code>. Open a project with Claude Code and send one message, then refresh.</div>`
+      : `<div class="pgrid">${list.map((p) => {
+          const open = projectPacks(p.id).filter((k) => !k.completedAt).length;
+          return `<button class="pcard ${p.active ? 'live' : 'idle'}" data-id="${esc(p.id)}">
+            <span class="pstatus"><span class="pdot"></span>${p.active ? 'Active now' : `Idle, ${ago(p.lastActive)}`}</span>
+            <span class="pname">${esc(p.name)}</span>
+            <span class="ppath">${esc(p.cwd)}</span>
+            <span class="pmeta">${p.sessions} ${p.sessions === 1 ? 'session' : 'sessions'}${open ? `, <b>${open} open ${open === 1 ? 'checkpoint' : 'checkpoints'}</b>` : ''}${p.exists ? '' : ', folder missing'}</span>
+          </button>`; }).join('')}</div>`}`;
+  const r = $('#p-refresh'); if (r) r.onclick = loadProjects;
+  document.querySelectorAll('.pcard').forEach((c) => c.onclick = () => openProject(c.dataset.id));
+  const n = list.filter((p) => p.active).length;
+  document.title = n ? `(${n}) Claudemy` : 'Claudemy';
+}
+
+// ----- open / close -----
+async function openProject(id, opts = {}) {
+  sfx.click();
+  stopLive();
+  project = { id, loading: true }; PK = null;
+  ptab = opts.tab || 'live'; ctab = opts.pack ? 'checkpoints' : 'coach';
+  live = { session: null, follow: true, events: [], offset: 0, idle: 9999, explained: {}, sessions: [], truncated: false };
+  openSteps.clear();
+  $('#projects-list').hidden = true; $('#project-detail').hidden = false;
+  renderProject();
+  try { project = await api(`/api/projects/${encodeURIComponent(id)}`); }
+  catch (e) { project = { id, error: e.message }; }
+  renderProject();
+  if (opts.pack) startCheckpoint(opts.pack);
+  startLive();
+}
+function closeProject() { stopLive(); project = null; PK = null; $('#project-detail').hidden = true; $('#projects-list').hidden = false; history.replaceState(null, '', location.pathname); loadProjects(); }
+function startLive() { stopLive(); pollLive(); liveTimer = setInterval(pollLive, 3000); }
+function stopLive() { if (liveTimer) clearInterval(liveTimer); liveTimer = null; }
+
+function renderProject() {
+  const el = $('#project-detail');
+  if (!project) return;
+  if (project.loading) { el.innerHTML = '<div class="wait"><span class="spin"></span>Opening project</div>'; return; }
+  if (project.error) { el.innerHTML = `<button class="backbtn" id="p-back">All projects</button><p class="error">${esc(project.error)}</p>`; $('#p-back').onclick = closeProject; return; }
+  const p = project.project;
+  el.innerHTML = `<div class="pdetail">
+    <div class="pcol">
+      <button class="backbtn" id="p-back">All projects</button>
+      <div class="ptitle"><div>
+        <span class="pill ${p.active ? 'live' : ''}" id="p-status"><span class="pdot"></span>${p.active ? 'Active now' : `Idle, last session ${ago(p.lastActive)}`}</span>
+        <h1>${esc(p.name)}</h1><div class="ppath">${esc(p.cwd)}</div></div></div>
+      <div class="vtabs" role="tablist">${[['live', 'Live session'], ['map', 'Project map'], ['notes', 'Notes for Claude Code'], ['sessions', 'Sessions']].map(([k, label]) => `<button role="tab" data-ptab="${k}" aria-selected="${ptab === k}">${label}</button>`).join('')}</div>
+      <div id="ptab-body"></div>
+    </div>
+    <aside class="coach" id="coach"></aside>
+  </div>`;
+  $('#p-back').onclick = closeProject;
+  el.querySelectorAll('[data-ptab]').forEach((b) => b.onclick = () => { ptab = b.dataset.ptab; renderProject(); });
+  renderTab();
+  renderCoach();
+}
+function renderTab() {
+  if (!$('#ptab-body')) return;
+  if (ptab === 'live') renderLive();
+  if (ptab === 'map') renderMapTab();
+  if (ptab === 'sessions') renderSessionsTab();
+  if (ptab === 'notes') renderNotesTab();
+}
+
+// ----- live feed -----
+async function pollLive() {
+  if (!project?.project || document.visibilityState !== 'visible') return;
+  const pid = project.project.id;
+  const qs = new URLSearchParams({ offset: String(live.offset) });
+  if (live.session) qs.set('session', live.session);
+  let r;
+  try { r = await api(`/api/projects/${encodeURIComponent(pid)}/live?${qs}`); } catch { return; }
+  if (project?.project?.id !== pid) return;
+  if (live.follow && live.session && r.latest && r.latest !== live.session) {
+    Object.assign(live, { session: r.latest, events: [], offset: 0, explained: {} }); openSteps.clear();
+    return pollLive();
+  }
+  const changed = r.events.length > 0 || live.session !== r.session || (live.idle > 30) !== (r.idleSeconds > 30);
+  live.session = r.session; live.offset = r.offset; live.idle = r.idleSeconds ?? 9999; live.sessions = r.sessions;
+  if (r.truncated) live.truncated = true;
+  if (r.explained) live.explained = { ...r.explained, ...live.explained };
+  live.events.push(...r.events);
+  const st = $('#p-status');
+  if (st) { const active = live.idle < 15 * 60; st.className = `pill ${active ? 'live' : ''}`; st.innerHTML = `<span class="pdot"></span>${active ? (live.idle < 30 ? 'Claude is working' : 'Active now') : 'Idle'}`; }
+  if (changed && ptab === 'live') renderLive();
+  queueAutoExplain();
+}
+function buildTurns() {
+  const turns = []; let cur = null; const byId = {};
+  for (const e of live.events) {
+    if (e.kind === 'prompt') { cur = { id: e.uuid, ts: e.ts, prompt: e.text, steps: [] }; turns.push(cur); continue; }
+    if (!cur) { cur = { id: 'start', ts: e.ts, prompt: null, steps: [] }; turns.push(cur); }
+    if (e.kind === 'result') { const s = byId[e.id]; if (s) s.result = e; continue; }
+    const step = { ...e }; if (e.id) byId[e.id] = step;
+    cur.steps.push(step); cur.end = e.ts || cur.end;
+  }
+  turns.forEach((t, i) => { t.done = i < turns.length - 1 || live.idle > 30; });
+  return turns;
+}
+function stepCounts(steps) {
+  const c = { files: new Set(), cmds: 0, reads: 0 };
+  for (const s of steps) { if (s.kind === 'edit' || s.kind === 'write') c.files.add(s.file); if (s.kind === 'cmd') c.cmds++; if (s.kind === 'read') c.reads++; }
+  const parts = [];
+  if (c.files.size) parts.push(`${c.files.size} ${c.files.size === 1 ? 'file' : 'files'} changed`);
+  if (c.cmds) parts.push(`${c.cmds} ${c.cmds === 1 ? 'command' : 'commands'}`);
+  if (c.reads) parts.push(`${c.reads} looked at`);
+  return parts.join(', ') || 'no actions';
+}
+function stepHtml(s, key) {
+  const open = openSteps.has(key) ? 'open' : '';
+  if (s.kind === 'say') return `<div class="say">${md(s.text)}</div>`;
+  if (s.kind === 'edit' || s.kind === 'write') {
+    const body = s.kind === 'edit'
+      ? `${s.before ? `<pre class="diff del">${esc(s.before)}</pre>` : ''}<pre class="diff add">${esc(s.after)}</pre>`
+      : `<pre class="diff add">${esc(s.preview)}</pre>`;
+    return `<details class="step" data-key="${key}" ${open}><summary>${FILE}<span class="sverb">${s.kind === 'write' ? 'Created' : 'Edited'}</span><code>${esc(s.file)}</code>${s.kind === 'write' ? `<span class="hint">${s.lines} lines</span>` : s.count ? `<span class="hint">${s.count} edits</span>` : ''}</summary>${body}</details>`;
+  }
+  if (s.kind === 'cmd') {
+    const r = s.result;
+    return `<details class="step cmd" data-key="${key}" ${open}><summary><span class="prompt">$</span><code>${esc(s.command.split('\n')[0].slice(0, 160))}</code>${r ? (r.isError ? '<span class="tag err">error</span>' : '') : '<span class="spin small"></span>'}</summary>
+      ${s.description ? `<p class="hint" style="margin:6px 0">${esc(s.description)}</p>` : ''}${s.command.includes('\n') ? `<pre class="diff">${esc(s.command)}</pre>` : ''}${r ? `<pre class="out">${esc(r.output || '(no output)')}</pre>` : ''}</details>`;
+  }
+  if (s.kind === 'plan') return `<div class="plan">${s.todos.map((t) => `<div class="todo ${esc(t.status)}"><i></i>${esc(t.text)}</div>`).join('')}</div>`;
+  if (s.kind === 'agent') return `<div class="say"><span class="tag">Subagent</span> ${esc(s.text)}</div>`;
+  if (s.kind === 'tool') return `<div class="reads"><span class="tag code">${esc(s.name)}</span></div>`;
+  return '';
+}
+function turnStepsHtml(t, ti) {
+  const out = []; let reads = [];
+  const flush = () => { if (reads.length) out.push(`<div class="reads">${reads.map((r) => `<span class="tag code">${esc(r)}</span>`).join('')}</div>`); reads = []; };
+  t.steps.forEach((s, si) => { if (s.kind === 'read') { reads.push(s.target); return; } flush(); out.push(stepHtml(s, `${ti}:${si}`)); });
+  flush();
+  return out.join('');
+}
+function explainHtml(t) {
+  const x = live.explained[t.id];
+  if (x) return `<div class="xbox">
+      <div class="xrow"><b>What changed</b><p>${esc(x.functional)}</p></div>
+      <div class="xrow"><b>How it works</b><p>${esc(x.technical)}</p></div>
+      ${x.why ? `<div class="xrow"><b>Why this way</b><p>${esc(x.why)}</p></div>` : ''}
+      ${x.check ? `<div class="xrow"><b>Check</b><p>${esc(x.check)}</p></div>` : ''}
+      ${x.terms?.length ? `<div class="terms">${x.terms.map((k) => `<span class="term" title="${esc(k.meaning)}"><b>${esc(k.term)}</b> ${esc(k.meaning)}</span>`).join('')}</div>` : ''}
+      <div class="xactions"><button class="btn small ghost" data-askturn="${esc(t.id)}">Ask the coach about this</button></div></div>`;
+  if (explaining === t.id) return `<div class="xbox pending"><div class="wait"><span class="spin"></span>Explaining this turn</div></div>`;
+  if (!t.done) return `<div class="xbox pending"><div class="wait"><span class="pulse"></span>Claude is working on this. The explanation follows when the turn is done.</div></div>`;
+  if (!t.prompt) return '';
+  return `<div class="xbox pending"><button class="btn small" data-explain-turn="${esc(t.id)}">Explain this turn</button></div>`;
+}
+function checkpointHtml(k) {
+  return `<div class="checkpoint k-${k.kind}"><div><span class="kindtag kt-${k.kind}">${k.kind === 'tech' ? 'Tech checkpoint' : 'Stakeholder checkpoint'}</span>
+    <b>${esc(k.title)}</b><span class="hint">${k.total} questions, ${clock(k.createdAt)}${k.completedAt ? `, done (${Math.round((k.avg || 0) * 100)}%)` : k.answered ? `, ${k.answered}/${k.total} answered` : ''}</span></div>
+    <button class="btn small ${k.kind === 'stakeholder' ? 'gold' : ''}" data-cp="${k.id}">${k.completedAt ? 'Review' : k.answered ? 'Continue' : 'Start'}</button></div>`;
+}
+function renderLive() {
+  const body = $('#ptab-body'); if (!body) return;
+  const nearBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 160;
+  const turns = buildTurns();
+  const cps = projectPacks(project.project.id).slice().sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const sessionOpts = live.sessions.map((s, i) => `<option value="${esc(s.id)}" ${s.id === live.session ? 'selected' : ''}>${i === 0 ? 'Latest: ' : ''}${esc((s.first || 'Session').slice(0, 60))} (${ago(s.updated)})</option>`).join('');
+  let cpIdx = 0;
+  const feed = turns.map((t, ti) => {
+    let html = `<article class="turn ${t.done ? '' : 'running'}">
+      <header><span class="who">You asked</span><time>${clock(t.ts)}</time></header>
+      ${t.prompt ? `<div class="ask">${esc(t.prompt.slice(0, 900))}${t.prompt.length > 900 ? '…' : ''}</div>` : '<div class="ask hint">Earlier in this session</div>'}
+      ${explainHtml(t)}
+      <details class="steps" data-key="t${ti}" ${openSteps.has(`t${ti}`) || (!t.done && ti === turns.length - 1) ? 'open' : ''}><summary>${CHEV}<span>What Claude did: ${stepCounts(t.steps)}</span></summary><div class="stepsin">${turnStepsHtml(t, ti)}</div></details>
+    </article>`;
+    const nextTs = turns[ti + 1]?.ts || '9999';
+    while (cpIdx < cps.length && cps[cpIdx].createdAt < nextTs) html += checkpointHtml(cps[cpIdx++]);
+    return html;
+  }).join('') + cps.slice(cpIdx).map(checkpointHtml).join('');
+  body.innerHTML = `
+    <div class="livebar">
+      <select id="l-session" aria-label="Session">${sessionOpts || '<option>No sessions yet</option>'}</select>
+      <label class="toggle"><input type="checkbox" id="l-follow" ${live.follow ? 'checked' : ''}> Follow newest session</label>
+      <label class="toggle"><input type="checkbox" id="l-auto" ${autoExplain ? 'checked' : ''}> Explain turns automatically</label>
+    </div>
+    ${live.truncated ? '<p class="hint">This session is long; showing the most recent part.</p>' : ''}
+    <div class="feed">${feed || '<div class="pempty"><strong>Waiting for Claude Code</strong>Send a message in Claude Code for this project and it appears here within a few seconds.</div>'}</div>`;
+  $('#l-session').onchange = (e) => { live.follow = e.target.selectedIndex === 0; Object.assign(live, { session: e.target.value, events: [], offset: 0, explained: {} }); openSteps.clear(); renderLive(); pollLive(); };
+  $('#l-follow').onchange = (e) => { live.follow = e.target.checked; if (live.follow) pollLive(); };
+  $('#l-auto').onchange = (e) => { autoExplain = e.target.checked; try { localStorage.setItem('claudemy-autoexplain', autoExplain ? 'on' : 'off'); } catch {} queueAutoExplain(); };
+  body.querySelectorAll('details[data-key]').forEach((d) => d.addEventListener('toggle', () => { d.open ? openSteps.add(d.dataset.key) : openSteps.delete(d.dataset.key); }));
+  body.querySelectorAll('[data-explain-turn]').forEach((b) => b.onclick = () => explainTurn(b.dataset.explainTurn));
+  body.querySelectorAll('[data-askturn]').forEach((b) => b.onclick = () => {
+    const t = turns.find((x) => x.id === b.dataset.askturn);
+    ctab = 'coach'; PK = null; renderCoach();
+    const ta = $('#pchat-input'); if (ta) { ta.value = `About the turn where I asked "${(t?.prompt || '').slice(0, 120)}": `; ta.focus(); }
+  });
+  body.querySelectorAll('[data-cp]').forEach((b) => b.onclick = () => startCheckpoint(b.dataset.cp));
+  if (nearBottom && live.follow) window.scrollTo(0, document.body.scrollHeight);
+}
+async function explainTurn(turnId) {
+  if (explaining) return;
+  const pid = project.project.id, session = live.session;
+  explaining = turnId; renderLive();
+  try {
+    const x = await api(`/api/projects/${encodeURIComponent(pid)}/explain-turn`, { session, turn: turnId });
+    if (project?.project?.id === pid && live.session === session) live.explained[turnId] = x;
+  } catch (e) { toast(esc(e.message), 5000); live.failed = { ...(live.failed || {}), [turnId]: true }; }
+  explaining = null;
+  if (project?.project?.id === pid && ptab === 'live') renderLive();
+  queueAutoExplain();
+}
+function queueAutoExplain() {
+  if (!autoExplain || explaining || !live || !project?.project) return;
+  const done = buildTurns().filter((t) => t.done && t.prompt);
+  const todo = done.filter((t) => !live.explained[t.id] && !(live.failed || {})[t.id]);
+  if (!todo.length) return;
+  // Explain what happens while you're watching (plus the last 10 minutes), and the most recent finished turn.
+  const recent = todo.filter((t) => new Date(t.end || t.ts).getTime() > pageOpenedAt - 10 * 60000);
+  const latest = done[done.length - 1];
+  const next = recent[0] || (todo.includes(latest) ? latest : null);
+  if (next) explainTurn(next.id);
+}
+
+// ----- notes for Claude Code tab -----
+async function renderNotesTab() {
+  const body = $('#ptab-body'), pid = project.project.id;
+  body.innerHTML = '<div class="wait"><span class="spin"></span>Loading notes</div>';
+  let r;
+  try { r = await api(`/api/projects/${encodeURIComponent(pid)}/learnings`); } catch (e) { body.innerHTML = `<p class="error">${esc(e.message)}</p>`; return; }
+  if (project?.project?.id !== pid || ptab !== 'notes') return;
+  const cm = r.claudeMd;
+  body.innerHTML = `
+    <section class="card">
+      <h2>Notes for Claude Code</h2>
+      <p style="margin:0 0 10px">After every checkpoint question, Claudemy updates a notes file in this project: what you understand, where you're still shaky, design points that came up, and coach insights you saved. Claude Code uses it to explain things at your level and to pick up open design points.</p>
+      <div class="chips"><span class="tag code">${esc(r.projectFile || 'Project folder not on this machine')}</span>${r.writeToProject ? '' : '<span class="tag err">Writing to the project is off in Settings</span>'}</div>
+      <div class="linkrow ${cm.linked ? 'on' : ''}">
+        <div><b>${cm.linked ? 'Connected to Claude Code' : 'Not connected yet'}</b>
+          <span class="hint">${cm.linked ? `CLAUDE.md imports the notes, so every new Claude Code session in this project reads them.` : `Adds one import line (<code>@.claude/claudemy/learnings.md</code>) to this project's CLAUDE.md, so every new session reads the notes. The notes file itself is gitignored; the CLAUDE.md line is not, so check it with your team.`}</span></div>
+        ${cm.linked ? '' : `<button class="btn" id="n-link" ${r.projectFile ? '' : 'disabled'}>Connect to Claude Code</button>`}
+      </div>
+    </section>
+    <section class="card">
+      <h2>Add a note</h2>
+      <p class="hint" style="margin-top:-6px">Anything you want Claude Code to know: an insight, a decision, or feedback from an earlier checkpoint.</p>
+      <input type="text" id="n-ctx" placeholder="Topic, for example: Exact-number lookup must be scoped to the supplier" style="margin-bottom:8px">
+      <textarea id="n-text" rows="5" placeholder="Paste or write the note"></textarea>
+      <div style="margin-top:10px"><button class="btn" id="n-save">Save note</button></div>
+    </section>
+    <section class="card notesmd">${r.count ? md(r.md) : '<p class="hint">No notes yet. Answer a checkpoint question, press "Save to notes" on a coach message, or add a note above.</p>'}</section>`;
+  $('#n-save').onclick = async () => {
+    const text = $('#n-text').value.trim(); if (!text) return;
+    await saveNote('project', pid, text, $('#n-ctx').value.trim()); renderNotesTab();
+  };
+  const l = $('#n-link');
+  if (l) l.onclick = async () => {
+    try { await api(`/api/projects/${encodeURIComponent(pid)}/link-claude-md`, {}); toast('CLAUDE.md now imports your learning notes'); sfx.pass(); renderNotesTab(); }
+    catch (e) { toast(esc(e.message)); }
+  };
+}
+async function saveNote(kind, idOrPack, text, context) {
+  try {
+    const r = await api(kind === 'pack' ? `/api/packs/${idOrPack}/notes` : `/api/projects/${encodeURIComponent(idOrPack)}/notes`, { text, context });
+    toast(r.projectFile ? 'Saved to notes for Claude Code' : 'Saved to Claudemy notes'); sfx.click();
+  } catch (e) { toast(esc(e.message)); }
+}
+
+// ----- map + sessions tabs -----
+function buildTree(paths) {
+  const root = { dirs: {}, files: [] };
+  for (const p of paths) { const parts = p.split('/'); let node = root; for (const d of parts.slice(0, -1)) node = node.dirs[d] ||= { dirs: {}, files: [] }; node.files.push(p); }
+  return root;
+}
+function countFiles(n) { return n.files.length + Object.values(n.dirs).reduce((a, d) => a + countFiles(d), 0); }
+function treeHtml(node, depth, expl, changed) {
+  const dirs = Object.keys(node.dirs).sort().map((name) => `
+    <details class="tdir" ${depth < 1 ? 'open' : ''}><summary>${CHEV}${FOLDER}<span class="fname">${esc(name)}</span><span class="tcount">${countFiles(node.dirs[name])}</span></summary>
+      <div class="tkids">${treeHtml(node.dirs[name], depth + 1, expl, changed)}</div></details>`).join('');
+  const files = node.files.sort().map((p) => {
+    const e = expl[p], busy = projBusy.explain[p];
+    return `<details class="tfile" data-path="${esc(p)}" ${busy ? 'open' : ''}><summary>${CHEV}${FILE}<span class="fname">${esc(p.split('/').pop())}</span>${changed.has(p) ? '<span class="tag changed">changed</span>' : ''}${e ? '<i class="tdot" title="Explained"></i>' : ''}</summary>
+      <div class="tbody"><div class="tpath">${esc(p)}</div>
+        ${busy ? '<div class="wait"><span class="spin"></span>Claude is reading this file</div>' : e ? md(e) : '<p class="hint">No explanation yet.</p>'}
+        <div class="trow"><button class="btn small" data-explain="${esc(p)}" ${busy ? 'disabled' : ''}>${e ? 'Explain again' : 'Explain this file'}</button><button class="btn ghost small" data-ask="${esc(p)}">Ask the coach</button></div>
+      </div></details>`;
+  }).join('');
+  return dirs + files;
+}
+function renderMapTab() {
+  const body = $('#ptab-body'), p = project.project, o = project.overview;
+  const changed = new Set(project.sessions.flatMap((s) => s.filesTouched));
+  const expl = (o && o.files) || {};
+  body.innerHTML = `
+    <div class="row" style="justify-content:space-between;margin-bottom:16px"><span class="hint">${o ? `Built ${ago(o.generatedAt)}. Rebuild after big changes.` : 'Claude reads the code and your recent sessions, then explains every file. Takes 1 to 5 minutes.'}</span>
+      <button class="btn gold" id="p-analyze" ${projBusy.analyze || !p.exists ? 'disabled' : ''}>${o ? 'Rebuild project map' : 'Build project map'}</button></div>
+    ${projBusy.analyze ? `<div class="card busycard">${ICON.brain('pa')}<div><b style="font:22px/1.2 var(--display)">Claude is studying ${esc(p.name)}</b><p class="hint" style="margin:6px 0 0">You can keep following the live session meanwhile.</p></div></div>` : ''}
+    ${o ? `<section class="card"><h2>What this is</h2><p class="lead">${esc(o.summary)}</p>
+        <div class="chips">${o.stack.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</div>
+        <div class="subhead">How it fits together</div><p style="margin:0">${esc(o.architecture)}</p>
+        ${o.risks.length ? `<div class="subhead">Where it breaks first</div><ul class="risks">${o.risks.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}</section>
+      <section class="card"><h2>Techniques to master (${o.techniques.length})</h2><div class="techs">${o.techniques.map((t) => {
+        const onPath = state.concepts.some((c) => c.name.toLowerCase() === t.name.toLowerCase());
+        return `<div class="tech"><b>${esc(t.name)}</b><p>${esc(t.what)}</p><p class="why">${esc(t.why)}</p>
+          <div class="chips" style="margin:2px 0 0">${t.where.slice(0, 4).map((w) => `<span class="tag code">${esc(w)}</span>`).join('')}</div>
+          <button class="btn small ${onPath ? 'ghost' : ''}" data-tech="${esc(t.name)}" ${onPath ? 'disabled' : ''}>${onPath ? 'On your path' : 'Add to my path'}</button></div>`; }).join('')}</div></section>` : ''}
+    <section class="card"><h2>Files (${project.files.length})</h2>
+      <p class="hint" style="margin-top:-6px">Open a file to read what it does. <span class="tag changed">changed</span> means Claude edited it in a recent session.</p>
+      <div class="tree" id="ptree">${project.files.length ? treeHtml(buildTree(project.files), 0, expl, changed) : '<p class="hint">The project folder is missing or empty.</p>'}</div></section>`;
+  $('#p-analyze').onclick = analyzeProject;
+  body.querySelectorAll('[data-tech]').forEach((b) => b.onclick = () => addTechnique(b.dataset.tech));
+  $('#ptree').onclick = (e) => {
+    const ex = e.target.closest('[data-explain]'), ask = e.target.closest('[data-ask]');
+    if (ex) { e.preventDefault(); explainFile(ex.dataset.explain); }
+    if (ask) { e.preventDefault(); ctab = 'coach'; PK = null; renderCoach(); const t = $('#pchat-input'); t.value = `Walk me through ${ask.dataset.ask}: what it does, why it's built this way, and what I should understand about it.`; t.focus(); }
+  };
+}
+function renderSessionsTab() {
+  $('#ptab-body').innerHTML = `<section class="card"><h2>Recent Claude Code sessions</h2>
+    ${project.sessions.map((s) => `<div class="sess"><div class="when">${new Date(s.start || s.end).toLocaleString()}</div>
+      <div class="ask">${esc((s.prompts[0] || 'No readable prompt').slice(0, 260))}${s.prompts.length > 1 ? ` <span class="hint">and ${s.prompts.length - 1} more</span>` : ''}</div>
+      <div class="chips" style="margin:0 0 8px">${s.filesTouched.slice(0, 10).map((f) => `<span class="tag code">${esc(f)}</span>`).join('')}${s.filesTouched.length > 10 ? `<span class="tag">+${s.filesTouched.length - 10}</span>` : ''}</div>
+      <button class="btn small ghost" data-follow="${esc(s.id)}">Open in live view</button></div>`).join('') || '<p class="hint">No sessions found.</p>'}</section>`;
+  document.querySelectorAll('[data-follow]').forEach((b) => b.onclick = () => {
+    Object.assign(live, { session: b.dataset.follow, follow: live.sessions[0]?.id === b.dataset.follow, events: [], offset: 0, explained: {} });
+    openSteps.clear(); ptab = 'live'; renderProject(); pollLive();
+  });
+}
+async function analyzeProject() {
+  const pid = project.project.id;
+  projBusy.analyze = true; if (ptab === 'map') renderMapTab();
+  try { const r = await api(`/api/projects/${encodeURIComponent(pid)}/analyze`, {}); if (project?.project?.id === pid) { project.overview = r.overview; sfx.levelup(); toast('Project map ready'); } }
+  catch (e) { toast(esc(e.message), 5000); }
+  projBusy.analyze = false;
+  if (project?.project?.id === pid && ptab === 'map') renderMapTab();
+}
+async function explainFile(rel) {
+  const pid = project.project.id;
+  projBusy.explain[rel] = true; renderMapTab();
+  try { const r = await api(`/api/projects/${encodeURIComponent(pid)}/explain-file`, { path: rel }); if (project?.project?.id === pid) { project.overview ||= { files: {}, techniques: [], stack: [], risks: [] }; project.overview.files[rel] = r.explanation; } }
+  catch (e) { toast(esc(e.message), 5000); }
+  delete projBusy.explain[rel];
+  if (project?.project?.id === pid && ptab === 'map') {
+    renderMapTab();
+    const d = document.querySelector(`.tfile[data-path="${CSS.escape(rel)}"]`);
+    if (d) { d.open = true; let up = d.parentElement.closest('details'); while (up) { up.open = true; up = up.parentElement.closest('details'); } }
+  }
+}
+async function addTechnique(name) {
+  try { const r = await api(`/api/projects/${encodeURIComponent(project.project.id)}/technique`, { name }); state = r.state; renderStats(); renderMapTab(); toast(`${esc(name)} added to your path`); }
+  catch (e) { toast(esc(e.message)); }
+}
+
+// ----- coach panel: chat + checkpoints -----
+function renderCoach() {
+  const el = $('#coach'); if (!el || !project?.project) return;
+  const mine = projectPacks(project.project.id), open = mine.filter((k) => !k.completedAt).length;
+  const draft = $('#pchat-input')?.value || '';
+  el.innerHTML = `
+    <div class="ctabs" role="tablist">
+      <button role="tab" data-ctab="coach" aria-selected="${ctab === 'coach'}">${ICON.brain('ct')}Coach</button>
+      <button role="tab" data-ctab="checkpoints" aria-selected="${ctab === 'checkpoints'}">Checkpoints${open ? `<span class="count">${open}</span>` : ''}</button>
+    </div>
+    <div class="cbody" id="cbody"></div>
+    <div id="cfoot"></div>`;
+  el.querySelectorAll('[data-ctab]').forEach((b) => b.onclick = () => { ctab = b.dataset.ctab; renderCoach(); });
+  if (ctab === 'coach') renderCoachChat(draft);
+  else if (PK) renderCheckpoint();
+  else renderCheckpointList();
+}
+function renderCoachChat(draft = '') {
+  const msgs = project.chat || [];
+  $('#cbody').innerHTML = `<div class="chat">
+    ${msgs.length ? '' : `<p class="hint">Your coach reads the code and follows the session. Use it to catch up while Claude Code keeps building.</p>
+      <div class="quick" style="padding:0">${['Catch me up on this session', 'Explain the last change like I\'m the customer', 'What should I double-check before trusting this?', 'Quiz me on the last turn', 'Give me the 2-minute architecture tour'].map((q) => `<button data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`}
+    ${msgs.map((m, mi) => m.role === 'user' ? `<div class="msg user"><p>${esc(m.text).replace(/\n/g, '<br>')}</p></div>` : `<div class="msg tutor"><span class="av">${ICON.brain('pav')}</span><div>${m.score != null ? `<span class="tag ${m.score >= 0.8 ? 'ok' : 'err'}" style="margin-bottom:6px;display:inline-block">${m.score >= 0.8 ? 'Correct' : 'Scored'} ${Math.round(m.score * 100)}%</span>` : ''}${md(m.text)}<button class="savenote" data-note="${mi}" title="Save this to the notes Claude Code reads">Save to notes</button></div></div>`).join('')}
+    ${projBusy.chat ? '<div class="wait"><span class="spin"></span>Your coach is reading the code</div>' : ''}</div>`;
+  $('#cfoot').innerHTML = `<div class="composer"><textarea id="pchat-input" placeholder="Ask about ${esc(project.project.name)}" aria-label="Message your coach" ${projBusy.chat ? 'disabled' : ''}></textarea>
+    <div style="display:grid;gap:6px"><button class="btn" id="psend" ${projBusy.chat ? 'disabled' : ''}>Send</button>${msgs.length ? '<button class="btn ghost" id="preset" style="padding:8px">New</button>' : ''}</div></div>`;
+  const cb = $('#cbody'); cb.scrollTop = cb.scrollHeight;
+  document.querySelectorAll('#cbody [data-q]').forEach((b) => b.onclick = () => sendProjectChat(b.dataset.q));
+  document.querySelectorAll('#cbody [data-note]').forEach((b) => b.onclick = () => {
+    const i = Number(b.dataset.note), m = msgs[i], prev = msgs[i - 1];
+    saveNote('project', project.project.id, m.text, prev && prev.role === 'user' ? prev.text : ''); b.textContent = 'Saved'; b.disabled = true;
+  });
+  const ta = $('#pchat-input'); ta.value = draft;
+  ta.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendProjectChat(); } };
+  $('#psend').onclick = () => sendProjectChat();
+  const r = $('#preset'); if (r) r.onclick = async () => { await api(`/api/projects/${encodeURIComponent(project.project.id)}/chat/reset`, {}); project.chat = []; renderCoach(); };
+}
+async function sendProjectChat(text) {
+  const ta = $('#pchat-input'), message = (text || ta?.value || '').trim();
+  if (!message || projBusy.chat) return;
+  const pid = project.project.id;
+  (project.chat ||= []).push({ role: 'user', text: message });
+  projBusy.chat = true; if (ta) ta.value = ''; if (ctab === 'coach') renderCoach();
+  try {
+    const r = await api(`/api/projects/${encodeURIComponent(pid)}/chat`, { message });
+    if (project?.project?.id === pid) project.chat = r.messages;
+    state.profile = r.profile; renderStats();
+    handleChatRewards(r);
+    (r.newBadges || []).forEach((b) => queue.push({ kind: 'badge', badge: b })); runQueue();
+  } catch (e) { project.chat.pop(); toast(esc(e.message)); }
+  projBusy.chat = false;
+  if (project?.project?.id === pid && ctab === 'coach') renderCoach();
+}
+function renderCheckpointList() {
+  const mine = projectPacks(project.project.id);
+  const open = mine.filter((k) => !k.completedAt), done = mine.filter((k) => k.completedAt);
+  $('#cfoot').innerHTML = '';
+  $('#cbody').innerHTML = mine.length ? `
+      ${open.length ? `<div class="subhead" style="margin-top:0">To do</div>${open.map(checkpointHtml).join('')}` : '<p class="hint">All checkpoints done. New ones appear here and in the live feed as Claude Code sends them.</p>'}
+      ${done.length ? `<div class="subhead">Done</div>${done.map(checkpointHtml).join('')}` : ''}`
+    : `<p class="hint">Checkpoints come from the two Claude Code skills: a <b style="color:var(--sky)">tech checkpoint</b> after a chunk of technical work, a <b style="color:var(--gold)">stakeholder checkpoint</b> at commits, pushes and deploys. Install them from the <code>claude-skills</code> folder. You can also ask Claude Code: "quiz me on what you just did".</p>`;
+  document.querySelectorAll('#cbody [data-cp]').forEach((b) => b.onclick = () => startCheckpoint(b.dataset.cp));
+}
+
+// ----- checkpoint player (in the coach panel) -----
+async function loadPacks(announce) {
+  try {
+    const r = await api('/api/packs');
+    const fresh = knownPackIds ? r.packs.filter((p) => !knownPackIds.has(p.id)) : [];
+    packs = r; knownPackIds = new Set(r.packs.map((p) => p.id));
+    if (announce) fresh.forEach((p) => { sfx.levelup(); toast(`New ${p.kind === 'tech' ? 'tech' : 'stakeholder'} checkpoint${p.projectName ? ` for ${esc(p.projectName)}` : ''}: <b>${esc(p.title)}</b>`, 6000); });
+    if (fresh.length && project?.project) { if (ptab === 'live') renderLive(); if (!PK && ctab === 'checkpoints') renderCoach(); else if (!PK) { const t = document.querySelector('[data-ctab="checkpoints"]'); if (t) renderCoach(); } }
+  } catch { packs ||= { packs: [] }; }
+  if (view === 'projects' && !project) renderProjects();
+}
+async function startCheckpoint(packId) {
+  let pack;
+  try { pack = await api(`/api/packs/${packId}`); } catch (e) { toast(esc(e.message)); return; }
+  if (pack.completedAt) { pack = await api(`/api/packs/${packId}/reset`, {}); }
+  const idx = pack.questions.findIndex((q) => !pack.progress[q.id]?.done);
+  PK = { pack, idx: idx === -1 ? 0 : idx, phase: idx === -1 ? 'finished' : 'question', answer: '', result: null, help: false, helpBusy: false };
+  ctab = 'checkpoints'; renderCoach();
+}
+const PERSONAS = [
+  [/admin|\bit\b|security/i, 'IT', '#FF8A7A'],
+  [/architect|review/i, 'A', '#E8987A'],
+  [/consultant|project lead|manager|\bpm\b/i, 'PL', '#E8A87C'],
+  [/./, 'C', '#FFC53D'],
+];
+function personaHtml(persona) {
+  const name = persona || 'The customer';
+  const [, initials, color] = PERSONAS.find(([re]) => re.test(name));
+  return `<div class="persona"><div class="face" style="background:${color}">${initials}</div><div><b>${esc(name)}</b><span>asks you</span></div></div>`;
+}
+function renderCheckpoint() {
+  const { pack } = PK, q = pack.questions[PK.idx], total = pack.questions.length;
+  const doneCount = pack.questions.filter((x) => pack.progress[x.id]?.done).length;
+  let html = `<div class="cp-top"><button class="backbtn" id="k-list" style="margin:0">All checkpoints</button><span class="hint">${PK.phase === 'finished' ? 'Done' : `Question ${PK.idx + 1} of ${total}`}</span></div>
+    <div class="pbar" style="margin:10px 0 14px"><i style="width:${(doneCount / total) * 100}%"></i></div>
+    <span class="kindtag kt-${pack.kind}">${pack.kind === 'tech' ? 'Tech checkpoint' : 'Stakeholder checkpoint'}</span>
+    <h3 class="cp-title">${esc(pack.title)}</h3>`;
+  let foot = '';
+  if (PK.phase === 'finished') {
+    const scores = pack.questions.map((x) => pack.progress[x.id]?.score ?? 0);
+    const avg = scores.reduce((a, b) => a + b, 0) / (scores.length || 1);
+    html += `<div style="text-align:center;margin:10px 0">${badgeSvg(pack.kind === 'stakeholder' ? 'boardroom' : 'quizmaster').replace('<svg', '<svg width="90" height="90"')}
+      <div style="font:26px/1.2 var(--display)">${avg >= 0.8 ? (pack.kind === 'stakeholder' ? 'Boardroom ready' : 'You own this') : 'Checkpoint done'}</div><p class="hint">Average ${Math.round(avg * 100)}%</p></div>
+      <ul class="scorelist">${pack.questions.map((x, i) => `<li><b style="color:${scores[i] >= 0.8 ? 'var(--mint)' : 'var(--coral)'}">${Math.round(scores[i] * 100)}%</b><span>${esc(x.question.split('```')[0].replace(/`/g, '').replace(/\s+/g, ' ').trim().slice(0, 110))}</span></li>`).join('')}</ul>`;
+    foot = `<div class="cp-foot"><button class="btn ghost" id="k-again">Play again</button><button class="btn" id="k-list2">Back to checkpoints</button></div>`;
+  } else {
+    const r = PK.result;
+    html += `${pack.kind === 'stakeholder' ? personaHtml(q.persona) : ''}
+      <div class="cp-q">${md(q.question)}</div>
+      ${q.source ? `<div class="chips" style="margin:0 0 10px"><span class="tag code">${esc(q.source)}</span></div>` : ''}
+      ${pack.context ? `<details class="ctx"><summary>What happened in the session</summary><div class="inner">${md(pack.context)}</div></details>` : ''}
+      <textarea id="k-answer" rows="5" placeholder="${pack.kind === 'stakeholder' ? 'Answer as you would in the meeting. Concrete and honest.' : 'Your own words. Explain why, not just what.'}" ${PK.phase === 'question' ? '' : 'disabled'}>${esc(PK.answer)}</textarea>
+      ${PK.error ? `<p class="error">${esc(PK.error)}</p>` : ''}`;
+    if (r && (PK.phase === 'retry' || PK.phase === 'result')) {
+      const pass = r.score >= 0.8, retry = PK.phase === 'retry';
+      html += `<div class="cp-sheet ${retry ? 'retry' : pass ? 'pass' : 'fail'}">
+        <div class="cp-verdict"><b>${retry ? 'So close. One more shot.' : pass ? (r.score >= 0.999 ? 'Flawless!' : 'Nailed it!') : 'Not this time'}</b>${r.rewards ? `<span class="xpgain small">+${r.rewards.xp} XP</span>` : `<span class="hint">${Math.round(r.score * 100)}%</span>`}</div>
+        <div>${md(r.feedback)}</div>
+        ${r.hit.length ? `<ul class="points hit">${r.hit.map((h) => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
+        ${r.missed.length ? `<ul class="points missed">${r.missed.map((h) => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
+        ${r.hint ? `<div class="explain"><b>Hint</b>${md(r.hint)}</div>` : ''}
+        ${r.modelAnswer ? `<div class="modelans"><b>${pack.kind === 'stakeholder' ? 'A strong answer in the meeting' : 'Model answer'}</b>${md(r.modelAnswer)}</div>` : ''}
+        ${r.explanation ? `<div class="explain"><b>Why</b>${md(r.explanation)}</div>` : ''}
+        ${r.why ? `<div class="explain" style="border-color:var(--gold)"><b style="color:var(--gold)">Why this matters</b>${md(r.why)}</div>` : ''}
+        ${r.learning && r.learning.projectFile ? `<p class="hint" style="margin:8px 0 0">Saved to the notes Claude Code reads.</p>` : ''}
+      </div>`;
+    }
+    if (PK.help) {
+      const msgs = pack.chat || [];
+      html += `<div class="cp-help"><div class="subhead" style="margin-top:0">Coach</div><div class="chat">
+        ${msgs.length ? '' : `<div class="quick" style="padding:0">${['Give me a hint', 'Explain the idea behind this question', 'Just explain it to me'].map((t) => `<button data-hq="${esc(t)}">${esc(t)}</button>`).join('')}</div>`}
+        ${msgs.map((m, mi) => m.role === 'user' ? `<div class="msg user"><p>${esc(m.text).replace(/\n/g, '<br>')}</p></div>` : `<div class="msg tutor"><span class="av">${ICON.brain('hav')}</span><div>${md(m.text)}<button class="savenote" data-pnote="${mi}">Save to notes</button></div></div>`).join('')}
+        ${PK.helpBusy ? '<div class="wait"><span class="spin"></span>Your coach is thinking</div>' : ''}</div>
+        <div class="composer" style="padding:10px 0 0;border:0"><textarea id="k-hinput" placeholder="Ask your coach" ${PK.helpBusy ? 'disabled' : ''}></textarea><button class="btn" id="k-hsend" ${PK.helpBusy ? 'disabled' : ''}>Send</button></div></div>`;
+    }
+    const last = pack.questions.every((x, i) => i === PK.idx || pack.progress[x.id]?.done);
+    if (PK.phase === 'question') foot = `<div class="cp-foot"><button class="btn ghost" id="k-help">${PK.help ? 'Hide coach' : 'Stuck?'}</button><button class="btn mint" id="k-check" ${PK.answer.trim().length < 3 ? 'disabled' : ''}>Check</button></div>`;
+    if (PK.phase === 'grading') foot = `<div class="cp-foot"><span class="wait"><span class="spin"></span>Grading</span><button class="btn" disabled>Checking</button></div>`;
+    if (PK.phase === 'retry') foot = `<div class="cp-foot"><button class="btn ghost" id="k-help">${PK.help ? 'Hide coach' : 'Explain it to me'}</button><button class="btn gold" id="k-retry">Try again</button></div>`;
+    if (PK.phase === 'result') foot = `<div class="cp-foot"><button class="btn ghost" id="k-help">${PK.help ? 'Hide coach' : 'Talk it through'}</button><button class="btn ${r.score >= 0.8 ? 'mint' : 'coral'}" id="k-next">${last ? 'Finish' : 'Next question'}</button></div>`;
+  }
+  $('#cbody').innerHTML = `<div class="cp">${html}</div>`;
+  $('#cfoot').innerHTML = foot;
+  const on = (sel, fn) => { const b = $(sel); if (b) b.onclick = fn; };
+  on('#k-list', () => { PK = null; renderCoach(); }); on('#k-list2', () => { PK = null; loadPacks(); renderCoach(); });
+  on('#k-again', async () => { await api(`/api/packs/${pack.id}/reset`, {}); startCheckpoint(pack.id); });
+  on('#k-check', checkCheckpoint); on('#k-retry', () => { PK.phase = 'question'; renderCheckpoint(); });
+  on('#k-next', nextCheckpointQuestion); on('#k-help', () => { PK.help = !PK.help; renderCheckpoint(); });
+  document.querySelectorAll('#cbody [data-hq]').forEach((b) => b.onclick = () => sendCheckpointHelp(b.dataset.hq));
+  document.querySelectorAll('#cbody [data-pnote]').forEach((b) => b.onclick = () => {
+    const i = Number(b.dataset.pnote), msgs = pack.chat || [], prev = msgs[i - 1];
+    saveNote('pack', pack.id, msgs[i].text, prev && prev.role === 'user' ? prev.text : pack.title); b.textContent = 'Saved'; b.disabled = true;
+  });
+  const hs = $('#k-hsend'); if (hs) { hs.onclick = () => sendCheckpointHelp(); $('#k-hinput').onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCheckpointHelp(); } }; }
+  const ta = $('#k-answer');
+  if (ta && PK.phase === 'question') {
+    ta.oninput = () => { PK.answer = ta.value; const b = $('#k-check'); if (b) b.disabled = ta.value.trim().length < 3; };
+    ta.onkeydown = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) checkCheckpoint(); };
+  }
+  if (PK.phase === 'retry' || PK.phase === 'result') { const cb = $('#cbody'); const sh = cb.querySelector('.cp-sheet'); if (sh && !PK.help) cb.scrollTop = sh.offsetTop - 60; }
+  if (PK.help) { const cb = $('#cbody'); cb.scrollTop = cb.scrollHeight; }
+}
+async function checkCheckpoint() {
+  if (!PK || PK.answer.trim().length < 3) return;
+  const { pack } = PK, q = pack.questions[PK.idx];
+  PK.phase = 'grading'; PK.error = null; renderCheckpoint();
+  try {
+    const r = await api(`/api/packs/${pack.id}/answer`, { questionId: q.id, answer: PK.answer });
+    PK.result = r; state.profile = r.profile; renderStats();
+    if (!r.done) { PK.phase = 'retry'; sfx.retry(); }
+    else {
+      PK.phase = 'result'; pack.progress[q.id] = { done: true, score: r.score, attempts: r.attempts };
+      if (r.score >= 0.8) { sfx.pass(); confetti(r.score >= 0.999 ? 1 : 0.5); } else sfx.fail();
+      const w = r.rewards || {};
+      if (w.rankUp) queue.push({ kind: 'rank', rank: w.rankUp });
+      if (w.playEarned) queue.push({ kind: 'play', minutes: w.playEarned });
+      (w.newBadges || []).forEach((b) => queue.push({ kind: 'badge', badge: b }));
+      runQueue();
+    }
+  } catch (e) { PK.phase = 'question'; PK.error = e.message; }
+  if (PK && ctab === 'checkpoints') renderCheckpoint();
+}
+function nextCheckpointQuestion() {
+  const { pack } = PK;
+  const next = pack.questions.findIndex((x, i) => i > PK.idx && !pack.progress[x.id]?.done);
+  const any = next !== -1 ? next : pack.questions.findIndex((x) => !pack.progress[x.id]?.done);
+  PK.result = null; PK.answer = ''; PK.error = null; PK.help = false;
+  if (any === -1) { PK.phase = 'finished'; sfx.levelup(); confetti(1); loadPacks(); }
+  else { PK.idx = any; PK.phase = 'question'; }
+  renderCheckpoint(); runQueue();
+}
+async function sendCheckpointHelp(text) {
+  const t = $('#k-hinput'), message = (text || t?.value || '').trim();
+  if (!message || PK.helpBusy) return;
+  const pack = PK.pack, q = pack.questions[PK.idx];
+  (pack.chat ||= []).push({ role: 'user', text: message });
+  PK.helpBusy = true; renderCheckpoint();
+  try {
+    const r = await api(`/api/packs/${pack.id}/help`, { questionId: q.id, message });
+    pack.chat = r.messages; state.profile = r.profile; renderStats();
+    (r.newBadges || []).forEach((b) => queue.push({ kind: 'badge', badge: b }));
+  } catch (e) { pack.chat.pop(); toast(esc(e.message)); }
+  if (PK && PK.pack === pack) { PK.helpBusy = false; if (ctab === 'checkpoints') renderCheckpoint(); }
+}
+setInterval(() => { if (document.visibilityState === 'visible') loadPacks(true); }, 15000);
+
+// ---------- settings ----------
+function renderSettings() {
+  const p = state.profile, st = p.settings || { minutesPerReward: 1, correctNeeded: 10, freePlay: false }, play = p.play || {};
+  const banked = Math.floor((play.seconds || 0) / 60), bankedS = Math.floor((play.seconds || 0) % 60);
+  $('#view-settings').innerHTML = `
+    <div class="phead-row"><div><h1>Settings</h1><p>How you earn play time in Deepvale, and how you want to play.</p></div></div>
+    <div class="setgrid">
+      <section class="card">
+        <h2>Play-time rewards</h2>
+        <p class="hint" style="margin-top:-4px">Correct answers (80% or more) in lessons, checkpoints and coach quizzes count.</p>
+        <div class="stepper"><div><b>Correct answers needed</b><span>per reward</span></div>
+          <button class="btn small ghost" data-step="correctNeeded" data-d="-1" aria-label="Fewer">−</button><output id="s-need">${st.correctNeeded}</output><button class="btn small ghost" data-step="correctNeeded" data-d="1" aria-label="More">+</button></div>
+        <div class="stepper"><div><b>Minutes per reward</b><span>of play time</span></div>
+          <button class="btn small ghost" data-step="minutesPerReward" data-d="-1" aria-label="Fewer">−</button><output id="s-mins">${st.minutesPerReward}</output><button class="btn small ghost" data-step="minutesPerReward" data-d="1" aria-label="More">+</button></div>
+        <div class="presets">${[[10, 1, 'Default'], [5, 2, 'Generous'], [3, 5, 'Party'], [20, 1, 'Hardcore']].map(([n, m, label]) => `<button class="rankpill ${st.correctNeeded === n && st.minutesPerReward === m ? 'reached' : ''}" data-preset="${n},${m}">${label}<small>${n} correct, ${m} min</small></button>`).join('')}</div>
+        <div class="setsum">Every <b>${st.correctNeeded}</b> correct ${st.correctNeeded === 1 ? 'answer earns' : 'answers earn'} <b>${st.minutesPerReward} ${st.minutesPerReward === 1 ? 'minute' : 'minutes'}</b>. You're at ${play.toward ?? 0}/${st.correctNeeded}, with ${banked}:${String(bankedS).padStart(2, '0')} banked.</div>
+      </section>
+      <section class="card ${st.freePlay ? 'freeon' : ''}">
+        <h2>Gaming mode</h2>
+        <p class="hint" style="margin-top:-4px">Done working? Play Deepvale without a timer. Your banked minutes stay untouched for later.</p>
+        <label class="bigtoggle"><input type="checkbox" id="s-free" ${st.freePlay ? 'checked' : ''}><span class="track"><span class="knob"></span></span>
+          <span><b>${st.freePlay ? 'Free play is on' : 'Free play is off'}</b><small>${st.freePlay ? 'No timer. Switch it off when you start working again.' : 'The timer runs and uses your earned minutes.'}</small></span></label>
+        <a class="btn mint big wide" href="/game.html" target="_blank" rel="noopener" style="margin-top:16px;text-decoration:none">Open Deepvale</a>
+      </section>
+      <section class="card">
+        <h2>Claudemy</h2>
+        <label class="row toggle" style="margin:8px 0"><input type="checkbox" id="s-sound" ${soundOn ? 'checked' : ''}> Sound effects</label>
+        <label class="row toggle" style="margin:8px 0"><input type="checkbox" id="s-auto" ${autoExplain ? 'checked' : ''}> Explain live turns automatically (one Claude call per turn)</label>
+        <label class="row toggle" style="margin:8px 0"><input type="checkbox" id="s-learn" ${st.writeLearnings !== false ? 'checked' : ''}> Write learning notes into project folders (.claude/claudemy, gitignored)</label>
+        <div class="subhead">Daily XP goal</div>
+        <div class="presets">${[20, 50, 100, 200].map((g) => `<button class="rankpill ${p.dailyGoal === g ? 'reached' : ''}" data-goal="${g}">${g} XP<small>${{ 20: 'Casual', 50: 'Regular', 100: 'Serious', 200: 'Insane' }[g]}</small></button>`).join('')}</div>
+      </section>
+    </div>`;
+  const saveSettings = async (patch) => {
+    try {
+      const r = await api('/api/settings', patch);
+      state = r.state; renderStats(); renderSettings();
+      if (r.earned) queue.push({ kind: 'play', minutes: r.earned }), runQueue();
+    } catch (e) { toast(esc(e.message)); }
+  };
+  document.querySelectorAll('[data-step]').forEach((b) => b.onclick = () => saveSettings({ [b.dataset.step]: st[b.dataset.step] + Number(b.dataset.d) }));
+  document.querySelectorAll('[data-preset]').forEach((b) => b.onclick = () => { const [n, m] = b.dataset.preset.split(',').map(Number); saveSettings({ correctNeeded: n, minutesPerReward: m }); });
+  $('#s-free').onchange = (e) => { saveSettings({ freePlay: e.target.checked }); if (e.target.checked) { sfx.levelup(); confetti(0.5); } };
+  $('#s-sound').onchange = (e) => { soundOn = e.target.checked; try { localStorage.setItem('claudemy-sound', soundOn ? 'on' : 'off'); } catch {} renderSoundBtn(); };
+  $('#s-learn').onchange = (e) => saveSettings({ writeLearnings: e.target.checked });
+  $('#s-auto').onchange = (e) => { autoExplain = e.target.checked; try { localStorage.setItem('claudemy-autoexplain', autoExplain ? 'on' : 'off'); } catch {} };
+  document.querySelectorAll('#view-settings [data-goal]').forEach((b) => b.onclick = async () => { state = await api('/api/profile', { dailyGoal: Number(b.dataset.goal) }); renderStats(); renderSettings(); });
+}
+
+// ---------- trophies ----------
+function renderTrophies() {
+  const p = state.profile;
+  const unlocked = p.badges.filter((b) => b.unlocked).length;
+  $('#view-trophies').innerHTML = `
+    <div class="trophyhead"><h1>Trophy room</h1>
+      <div class="namebox"><input type="text" id="p-name" placeholder="Name on your certificates" value="${esc(p.name)}" aria-label="Name on certificates"><button class="btn" id="p-save">Save</button></div></div>
+    <h3 class="sec">Rank ladder</h3>
+    <div class="ranks">${p.ranks.map((r, i) => `<div class="rankpill ${p.xp >= r.xp ? 'reached' : ''}">${esc(r.name)}<small>${r.xp} XP</small></div>`).join('')}</div>
+    <h3 class="sec">Certificates (${p.certificates.length})</h3>
+    ${p.certificates.length ? `<div class="certs">${p.certificates.map((c) => `<button class="certcard" data-cert="${c.id}">${badgeSvg('certified')}<div><b>${esc(c.conceptName)}</b><span>${esc(c.topic)}, ${new Date(c.date).toLocaleDateString()}</span></div></button>`).join('')}</div>`
+      : '<p class="hint">Reach Expert on a skill to earn your first certificate. That takes passing at every level, from explaining it back to teaching it.</p>'}
+    <h3 class="sec">Badges (${unlocked}/${p.badges.length})</h3>
+    <div class="badges">${p.badges.map((b) => `<div class="badge ${b.unlocked ? '' : 'locked'}">${badgeSvg(b.id)}<b>${esc(b.name)}</b><span>${esc(b.desc)}</span></div>`).join('')}</div>
+    <h3 class="sec">Daily goal</h3>
+    <div class="ranks">${[20, 50, 100, 200].map((g) => `<button class="rankpill ${p.dailyGoal === g ? 'reached' : ''}" data-goal="${g}" style="cursor:pointer">${g} XP<small>${{ 20: 'Casual', 50: 'Regular', 100: 'Serious', 200: 'Insane' }[g]}</small></button>`).join('')}</div>`;
+  $('#p-save').onclick = async () => { state = await api('/api/profile', { name: $('#p-name').value }); toast('Name saved'); renderAll(); };
+  document.querySelectorAll('[data-goal]').forEach((b) => b.onclick = async () => { state = await api('/api/profile', { dailyGoal: Number(b.dataset.goal) }); renderAll(); });
+  document.querySelectorAll('[data-cert]').forEach((b) => b.onclick = () => showCertificate(p.certificates.find((c) => c.id === b.dataset.cert)));
+}
+
+// ---------- log ----------
+function renderLog() {
+  $('#entries').innerHTML = state.log.length
+    ? state.log.map((e) => `<div class="entry"><div class="concept">${esc(e.conceptName)}</div><span class="kind">${esc(e.kind)}</span><span class="when">${esc(e.project || 'No project')}, ${new Date(e.ts).toLocaleString()}</span><p>${esc(e.text)}</p></div>`).join('')
+    : '<p class="hint">No entries yet.</p>';
+  $('#snippet').textContent = `$body = @{ concept = "Private endpoints and Private DNS zones"; topic = "Azure networking"; project = "My project"; kind = "decision"; text = "What was decided and why, plus the alternative we rejected." } | ConvertTo-Json
+Invoke-RestMethod -Uri ${location.origin}/api/log -Method Post -ContentType "application/json" -Body $body`;
+}
+
+// ---------- wiring ----------
+let view = 'projects';
+function renderAll() {
+  renderStats(); renderHero(); renderPath(); renderSide();
+  if (view === 'trophies') renderTrophies();
+  if (view === 'settings') renderSettings();
+  if (view === 'log') renderLog();
+}
+document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
+  view = b.dataset.view;
+  document.querySelectorAll('.tabs button').forEach((x) => x.toggleAttribute('aria-current', x === b));
+  document.querySelectorAll('.tabs button[aria-current]').forEach((x) => x.setAttribute('aria-current', 'page'));
+  ['projects', 'path', 'trophies', 'log', 'settings'].forEach((v) => { $('#view-' + v).hidden = v !== view; });
+  if (view === 'projects') { if (project) { renderProject(); startLive(); } else loadProjects(); } else stopLive();
+  renderAll();
+});
+$('#sound').onclick = () => { soundOn = !soundOn; try { localStorage.setItem('claudemy-sound', soundOn ? 'on' : 'off'); } catch {} renderSoundBtn(); sfx.click(); };
+$('#add-concept').onsubmit = async (e) => {
+  e.preventDefault(); const f = new FormData(e.target);
+  try { const r = await api('/api/concepts', { name: f.get('name'), topic: f.get('topic') || 'General' }); state = r.state; e.target.reset(); selectedId = r.id; renderAll(); toast('Added to your path'); }
+  catch (err) { toast(esc(err.message)); }
+};
+$('#add-entry').onsubmit = async (e) => {
+  e.preventDefault(); const f = Object.fromEntries(new FormData(e.target));
+  try { await api('/api/log', f); $('#e-text').value = ''; state = await api('/api/state'); renderAll(); toast('Entry saved'); }
+  catch (err) { toast(esc(err.message)); }
+};
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!$('#modal').hidden && !showing) { $('#modal').hidden = true; return; }
+  if (L && $('#modal').hidden) closeLesson();
+});
+async function checkCli() {
+  const el = $('#cli');
+  try {
+    const h = await api('/api/health');
+    el.className = 'cli ' + (h.ok ? 'ok' : 'bad');
+    $('#cli-text').textContent = h.ok ? 'Claude connected' : 'Claude CLI not found';
+    el.title = h.ok ? `${h.version}, tutor language ${h.language}, model ${h.model}` : h.error;
+  } catch { el.className = 'cli bad'; $('#cli-text').textContent = 'Server offline'; }
+}
+(async function init() {
+  renderSoundBtn();
+  state = await api('/api/state');
+  renderAll(); checkCli(); loadProjects();
+  await loadPacks();
+  const m = location.hash.match(/^#pack\/([\w-]+)$/);
+  if (m) { const k = packs.packs.find((p) => p.id === m[1]); if (k && k.projectId) openProject(k.projectId, { pack: k.id }); }
+})();
+</script>
+</body>
+</html>
